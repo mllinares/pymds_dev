@@ -36,19 +36,19 @@ Success message should print on the terminal window
 
 Package description
 -------------------
-**1) Data files**\
+1) Data files\
 data.csv : datafile of the rock chemestry\
 coll.csv : datafile of the colluvium chemestry\
 sf.csv : datafile of the magnetic field factors\
 constants.py : dictionary of all constants\
 parameters.py : python class containing the site parameters (to be modified for each site!)\
 seismic_scenario.py : true seismic scenario, you can use this file to set some paramters of the seismic scenario
-**2) Sand alone scripts**\
+2) Sand alone scripts\
 run_forward.py : run only the forward function\
 plot_data.py : plot the data\
 gen_synthetics.py : generate a synthetic datafile\
 invert.py : invert your datafile
-**3) Dependences**\
+3) Dependences\
 util folder : contains utlitary functions\
 chemestry_scaling.py : module containing functions for the chemestry scaling\
 geometric_scaling_factors : module containing functions for the scling associated to the geometry of the scarp
