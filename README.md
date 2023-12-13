@@ -1,2 +1,4 @@
-Quick start from scratch
-Install
+Quick start from scratch\
+Install\
+1)
+`{ conda create }`
