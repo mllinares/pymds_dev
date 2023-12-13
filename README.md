@@ -85,7 +85,7 @@ target_prob = 0.9 # target acceptancy probability (<1)
 Note to new python users
 -------------------------
 If you are new to python, please refer to the "quick_python_intro.ipynb"  and to the "quick_pyro_intro.ipynb" before going further.\
-The notebooks contains useful info on numpy, pyro, pytorch and matplotlib\
+The notebooks contain useful info on numpy, pyro, pytorch and matplotlib\
 Run the folowing from a terminal
 ```
 conda activate NAME_OF_YOUR_ENVIRONMENT
