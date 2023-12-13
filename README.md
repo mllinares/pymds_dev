@@ -1,5 +1,5 @@
 # pymds_dev
-Dev repo of pymds (hidden) 
+Dev repo of pymds, test for the true repo
 
 Install
 -------
