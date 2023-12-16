@@ -46,9 +46,9 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     rho_coll = param.rho_coll
     
     age_base = seismic_scenario['ages']
-    age=age_base.detach().numpy() 
+    age = age_base.clone().detach().numpy() 
     slip_base=seismic_scenario['slips']
-    slip = slip_base.detach().numpy() 
+    slip = slip_base.clone().detach().numpy() 
     
     if find_slip == True and np.sum(slip)<Hfinal or find_slip == True and np.sum(slip)>Hfinal:
         slip=slip+((Hfinal-np.sum(slip))/len(slip))
@@ -211,7 +211,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     EL = param.sf
     
     age_base = seismic_scenario['ages']
-    age=age_base.detach().numpy() 
+    age=age_base.clone().detach().numpy() 
     #durations=seismic_scenario['durations']
     # slip_base=seismic_scenario['slips']
     # slip = slip_base.detach().numpy() 

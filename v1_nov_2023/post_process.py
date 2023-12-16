@@ -10,7 +10,7 @@ import matplotlib.ticker as mtick
 # import pandas as pd
 import numpy as np
 import torch
-
+import ruptures as rpt
 # %% computational functions
 def RMSw(observed_data, modeled_data, incertitude=np.array([])):
     """ Compute the weighted RMS between two datasets
@@ -26,7 +26,7 @@ def RMSw(observed_data, modeled_data, incertitude=np.array([])):
     
 def aicc(measurements, calculations, nb_param):
     """ This function allows to calculate the Akaike criterion
-        INPUTS : measuremments, your data, numpy array
+        INPUTS : measurements, your data, numpy array
                  calculations, your synthetic data, numpy array
                  nb_param, integer
         
@@ -40,7 +40,66 @@ def aicc(measurements, calculations, nb_param):
     aicc = n*np.log(aicc/n) + (2*n*nb_param)/(n - nb_param - 1)
     return aicc
 
+def precompute_slips(cl_36, h_samples, nb_bkps, model_name='rank', double_check=False, max_bkps=5, plot=False):
+    """ This function pre-computes the slip array for the inversion (see Truong at al. 2020, rupture package for more info)
+        INPUTS : cl_36, cl36 concentration data, array or tensor, shape : (1, nb_samples)
+                 h_samples, height of samples, array or tensor, shape : (1, nb_samples)
+                 nb_bkps, number of earthquakes, integer
+                 model_name, name of the model you bwant to use, string (l1, l2, normal, rank, rbf, ar), default ='rank'
+                 double_check, use the penalty algorithm to infer minimum ruptures (experimental), boolean, default=False
+                 max_bkps, maximum expected number of earthquakes, interger, default=5
+                 plot, make plots of infered ruptures, boolean, default=False
+        OUTPUT : slips, slip tensor, torch tensor
+                 """
+                 
+    slips = torch.zeros((nb_bkps))
+    algo = rpt.Dynp(model=model_name, min_size=1, jump=10).fit(cl_36) # l1, l2, normal, rbf, rank
+    result = np.array(algo.predict(n_bkps=nb_bkps))
+    
+    for i in range (0, len(result)-1):
+        slips[i]=h_samples[result[i+1]]-h_samples[result[i]]
+        
+    if double_check == True:
+        my_bkps = algo.predict(pen=np.log(len(cl_36)) * max_bkps * 0.7**2)
+        
+    if plot == True:
+        plt.xlabel('[$^{36}$Cl] (at/g)')
+        plt.ylabel('Height(m)')
+        plt.legend(loc='lower right')
+        plt.tight_layout()
+
+    return slips
+
 # %% data management functions
+def variable_results(number_of_models, variable, posterior_samples):
+    """ Return an array containing the values of posterior samples that are inferred iteratively : e.g. "age"+str(i) = pyro.sample
+    Return also the median and mean values.
+
+    INPUTS: number_of_models, number of models inferred, int
+            variable, name of the variable for which you want to save the result, str
+            posterior_samples, dictionnary conctaining the posterior samples, dict
+            
+    OUTPUT: save_all, all tested value, 2D array (numpy) shape ((number_of_models, number_of_events))
+            median, median value, 1D array (numpy)
+            mean, mean value, 1D array (numpy)
+            txt file containing tested values
+            
+    EX : number_of-models= 100, number_of_events = 3, variable ='age'
+        =>  save_all  = ([age1_model1, age2_model1, age3, model1],...,[age1_model100, age2_model100, age3_model100])
+            median = ([median(age1_model1-100), median(age2_model1_100), median(age3_model1_100)])
+            mean = ([mean(age1_model1-100), mean(age2_model1_100), mean(age3_model1_100)]) """
+    
+    save_all = np.zeros((number_of_models)) # array used to store tested values
+
+    keyword = variable
+    inferred = posterior_samples[keyword].detach().numpy()
+    save_all = inferred
+    median = np.median(inferred)
+    mean = np.mean(inferred)
+   
+    np.savetxt(variable+'.txt', save_all)
+    return save_all, median, mean
+
 def array_results(number_of_models, number_of_events, variable, posterior_samples):
     """ Return an array containing the values of posterior samples that are inferred iteratively : e.g. "age"+str(i) = pyro.sample
     Return also the median and mean values.
