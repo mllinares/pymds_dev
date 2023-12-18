@@ -29,6 +29,7 @@ Check out your installation:
 ----------------------------
 In your terminal, go to the downloaded package directory, enter the following commands:
 ```
+cd *PATH TO PACKAGE*
 cd tests
 conda activate NAME_OF_YOUR_ENVIRONMENT
 python3 run_test.py
@@ -44,7 +45,7 @@ sf.csv : datafile of the magnetic field factors\
 constants.py : dictionary of all constants\
 parameters.py : python class containing the site parameters (to be modified for each site!)\
 seismic_scenario.py : true seismic scenario, you can use this file to set some paramters of the seismic scenario
-2) Sand alone scripts\
+2) Stand alone scripts\
 run_forward.py : run only the forward function\
 plot_data.py : plot the data\
 gen_synthetics.py : generate a synthetic datafile\
