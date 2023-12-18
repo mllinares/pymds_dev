@@ -3,8 +3,9 @@ Dev repo of pymds, test for the true repo
 
 Install
 -------
-Just download the package, extract it in your working directory.
-- Requirements :
+Download the package and extract it in your working directory. If your install does not meet the following requirements, create a virtual environment and install the libraries.
+
+Requirements :
 - Python 3.10.9
 - Pyro-ppl 1.8.4
 - Pyro-api 0.1.2
@@ -13,7 +14,7 @@ Just download the package, extract it in your working directory.
 - Scipy 1.1.10
 - Ruptures 1.0.6
   
-Creating a virtual environment to install those libraries is highly recommended.
+Creating a virtual environment and installing necessary libraries
 
 With Conda/Miniconda: 
 
@@ -26,7 +27,7 @@ Spyder is a python IDE, you can use a different one (PyCharm, Visual Studio, ...
 
 Check out your installation:
 ----------------------------
-In your terminal, enter the following command, go to the package directory:
+In your terminal, go to the downloaded package directory, enter the following commands:
 ```
 cd tests
 conda activate NAME_OF_YOUR_ENVIRONMENT
