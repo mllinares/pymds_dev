@@ -3,7 +3,7 @@ Dev repo of pymds, test for the true repo
 
 Install
 -------
-Download the package and extract it in your working directory. If your install does not meet the following requirements, create a virtual environment and install the libraries.
+Download the package and extract it in your working directory. If your python install does not meet the following requirements, create a virtual environment and install the libraries.
 
 Requirements :
 - Python 3.10.9
@@ -15,7 +15,7 @@ Requirements :
 - Ruptures 1.0.6
   
 Creating a virtual environment and installing necessary libraries
-
+------------------------------------------------------------------
 With Conda/Miniconda: 
 
 From your terminal : enter the following command
