@@ -136,3 +136,11 @@ target_prob = 0.9 # target acceptancy probability (<1)
 It is recommended to first test the algorithm without the warmup, low number of smaples, low tree depth and low target acceptancy probaility and then increase those.
 As discussed in the paper, the algorithm performs better with low warm_up steps.
 If you have no idea of what those are, it is recommended that you download the jupyter notebook "quick_pyro_intro.ipynb" before using pymds on true datasets.
+
+Link to previous publications
+-----------------------------
+github
+
+License
+-------
+
