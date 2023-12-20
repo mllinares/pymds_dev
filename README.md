@@ -57,33 +57,55 @@ geometric_scaling_factors : module containing functions for the scling associate
 
 Example on synthetic dataset
 ----------------------------
-Usage of a python IDE strongly recommended!\
+Usage of a python IDE strongly recommended!
+1) Modify the invert.py\
+Before running the inversion there are some parameters that you can tune:
+In the invert.py file you can modify some of the MCMC parameters like the number of steps during the warm-up and sampling phase, the depth of the probability tree and the target acceptancy probability.
+
+```python
+""" MCMC parameters, to be set with CAUTION """
+pyro.set_rng_seed(20)
+w_step = 0  # number of warmup step
+nb_sample = 1000 # number of samples
+tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
+target_prob = 0.9 # target acceptancy probability (<1)
+```
+You can also modify the parameters you whish to invert : ages are always inverted, but you can choose to invert the slips associated to each event by setting 'invert_slips' to True. Alternatively, you can use the rupture package to find the ruputures by setting 'invert_slips' to False and 'use_rpt' to True. If both 'invert_slips' and 'use_rpt' are set to False, then the slips used are the one present in 'seismic_scenario.py'.
+
+You can also invert the long term slip rate by setting 'invert_sr' to True, if set to False, the slip rate (SR) used is the one entered in 'seismic_scenario.py'.
+
+Be advised that the number of parameters you inverse have an impact on execution time.
+```python
+""" Chose parameters to invert """
+invert_slips = False # invert slip array ?
+use_rpt = True # use rupture package to find slips
+invert_sr = False # invert slip rate ?
+invert_quies = False # invert quiescence
+```
+
+2) Run invert.py
 from terminal window (does not require to be in a specific working directory):
 ```
 conda activate NAME_OF_YOUR_ENVIRONMENT
 spyder
 ```
-1) Run invert.py
 Open "invert.py" from the example folder inside your IDE an click on the play button\
 Or from terminal window inside the "example" directory run :
 ```
 nohup python3 invert.py
 ```
 A progress bar indicates the progression of the algorithm\
-When the inversion is done, plots and ".txt" files are generated
--age.txt : tested ages at each iteration
--cl_36_infered.txt : all associated cl36 profile
--summary.txt : summary of the inversion
-2) You can modify some MCMC parameters
+When the inversion is done, plots and ".txt" files are generated:
 
-```python
-""" MCMC parameters, to be set with CAUTION """
-pyro.set_rng_seed(20)
-w_step = 0  # number of warmup (~30% of total models)
-nb_sample = 1000 # number of samples
-tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
-target_prob = 0.9 # target acceptancy probability (<1)
-```
+- age.txt : infered ages at each iteration
+- infered_cl36.txt : all associated cl36 profile
+- RMSw.txt : root mean square associated to the tested cl36 profiles
+- sigma.txt : infered sigma
+- summary.txt : summary of the inversion
+- nohup.out : progression of the algorithm
+- slip.txt : infered slip (if inversed)
+- SR.txt : infered long term slip rate (if inversed)
+
 Note to new python users
 -------------------------
 If you are new to python, please refer to the "quick_python_intro.ipynb"  and to the "quick_pyro_intro.ipynb" before going further.\
