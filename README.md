@@ -70,7 +70,8 @@ nb_sample = 1000 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
 target_prob = 0.9 # target acceptancy probability (<1)
 ```
-You can also modify the parameters you whish to invert : ages are always inverted, but you can choose to invert the slips associated to each event by setting ```invert_slips``` to ```True```. Alternatively, you can use the rupture package to find the ruputures by setting ```invert_slips``` to ```False``` and ```use_rpt``` to ```True```. If both ```invert_slips``` and ```use_rpt``` are set to ```False```, then the slips used are the one present in ```seismic_scenario.py```.
+You can also modify the parameters you whish to invert : ages are always inverted, but you can choose to invert the slips associated to each event by setting ```invert_slips``` to ```True```.
+Alternatively, you can use the rupture package to find the ruputures by setting ```invert_slips``` to ```False``` and ```use_rpt``` to ```True```. If both ```invert_slips``` and ```use_rpt``` are set to ```False```, then the slips used are the one present in ```seismic_scenario.py```.
 
 You can also invert the long term slip rate by setting ```invert_sr``` to ```True```, if set to ```False```, the slip rate (SR) used is the one entered in ```seismic_scenario.py```.
 ```python
