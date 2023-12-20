@@ -70,11 +70,9 @@ nb_sample = 1000 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
 target_prob = 0.9 # target acceptancy probability (<1)
 ```
-You can also modify the parameters you whish to invert : ages are always inverted, but you can choose to invert the slips associated to each event by setting 'invert_slips' to True. Alternatively, you can use the rupture package to find the ruputures by setting 'invert_slips' to False and 'use_rpt' to True. If both 'invert_slips' and 'use_rpt' are set to False, then the slips used are the one present in 'seismic_scenario.py'.
+You can also modify the parameters you whish to invert : ages are always inverted, but you can choose to invert the slips associated to each event by setting ```invert_slips``` to ```True```. Alternatively, you can use the rupture package to find the ruputures by setting ```invert_slips``` to ```False``` and ```use_rpt``` to ```True```. If both ```invert_slips``` and ```use_rpt``` are set to ```False```, then the slips used are the one present in ```seismic_scenario.py```.
 
-You can also invert the long term slip rate by setting 'invert_sr' to True, if set to False, the slip rate (SR) used is the one entered in 'seismic_scenario.py'.
-
-Be advised that the number of parameters you inverse have an impact on execution time.
+You can also invert the long term slip rate by setting ```invert_sr``` to ```True```, if set to ```False```, the slip rate (SR) used is the one entered in ```seismic_scenario.py```.
 ```python
 """ Chose parameters to invert """
 invert_slips = False # invert slip array ?
@@ -82,6 +80,25 @@ use_rpt = True # use rupture package to find slips
 invert_sr = False # invert slip rate ?
 invert_quies = False # invert quiescence
 ```
+
+Be advised that the number of parameters you inverse have an impact on execution time, if you only wish to test the package on your computer, we recommend the following settings:
+```python
+number_of_events = 3
+""" Chose parameters to invert """
+invert_slips = False # invert slip array ?
+use_rpt = True # use rupture package to find slips
+invert_sr = False # invert slip rate ?
+invert_quies = False # invert quiescence
+
+""" MCMC parameters, to be set with CAUTION """
+pyro.set_rng_seed(20)
+w_step = 10  # number of warmup step
+nb_sample = 1000 # number of samples
+tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
+target_prob = 0.9 # target acceptancy probability (<1)
+
+```
+This should take approximatly 3h to run on a standard computer (CPU i7-1165G7 @ 2.80GHz × 8). If your specks are lower than those, the algorithm may take longer to complete.
 
 2) Run invert.py
 from terminal window (does not require to be in a specific working directory):
@@ -95,6 +112,8 @@ Or from terminal window inside the "example" directory run :
 nohup python3 invert.py
 ```
 A progress bar indicates the progression of the algorithm\
+![Capture d’écran du 2023-12-20 16-40-56](https://github.com/mllinares/pymds_dev/assets/126869078/83afc528-217d-485e-935f-2da3c2bb906f)
+
 When the inversion is done, plots and ".txt" files are generated:
 
 - age.txt : infered ages at each iteration
@@ -105,6 +124,10 @@ When the inversion is done, plots and ".txt" files are generated:
 - nohup.out : progression of the algorithm
 - slip.txt : infered slip (if inversed)
 - SR.txt : infered long term slip rate (if inversed)
+
+If you run the example dataset with the recommanded settings, you should see these 3 plots:
+
+
 
 Note to new python users
 -------------------------
