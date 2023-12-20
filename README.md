@@ -107,7 +107,10 @@ from terminal window (does not require to be in a specific working directory):
 conda activate NAME_OF_YOUR_ENVIRONMENT
 spyder
 ```
+
 Open "invert.py" from the example folder inside your IDE an click on the play button\
+![Capture d’écran du 2023-12-20 16-46-57](https://github.com/mllinares/pymds_dev/assets/126869078/5bf5ee0c-0af3-4ebd-9e2c-f25f729b8f1c)
+
 Or from terminal window inside the "example" directory run :
 ```
 nohup python3 invert.py
@@ -127,12 +130,13 @@ When the inversion is done, plots and ".txt" files are generated:
 - SR.txt : infered long term slip rate (if inversed)
 
 If you run the example dataset with the recommanded settings, you should see these 3 plots:
-
-
+![Event 1](https://github.com/mllinares/pymds_dev/assets/126869078/74c33cb0-ce32-4a39-81f5-154461dd7377)
+![Event 2](https://github.com/mllinares/pymds_dev/assets/126869078/e940f081-7f56-453c-8574-f473a814e59c)
+![Event 3](https://github.com/mllinares/pymds_dev/assets/126869078/e0052e4d-7070-44fd-8473-f55b21426f87)
 
 Note to new python users
 -------------------------
-If you are new to python, please refer to the "quick_python_intro.ipynb"  and to the "quick_pyro_intro.ipynb" before going further.\
+If you are new to python, please refer to the ```quick_python_intro.ipynb```  and to the ```quick_pyro_intro.ipynb``` before going further.\
 The notebooks contain useful info on numpy, pyro, pytorch and matplotlib\
 Run the folowing from a terminal
 ```
@@ -181,9 +185,9 @@ nb_sample = 1000 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
 target_prob = 0.9 # target acceptancy probability (<1)
 ```
-It is recommended to first test the algorithm without the warmup, low number of smaples, low tree depth and low target acceptancy probaility and then increase those.
+It is recommended to first test the algorithm without the warmup, low number of samples, low tree depth and low target acceptancy probaility and then increase those.
 As discussed in the paper, the algorithm performs better with low warm_up steps.
-If you have no idea of what those are, it is recommended that you download the jupyter notebook "quick_pyro_intro.ipynb" before using pymds on true datasets.
+If you have no idea of what those are, it is recommended that you download the jupyter notebook ```quick_pyro_intro.ipynb``` before using pymds on true datasets.
 
 Link to previous publications
 -----------------------------
