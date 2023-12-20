@@ -107,12 +107,12 @@ from terminal window (does not require to be in a specific working directory):
 conda activate NAME_OF_YOUR_ENVIRONMENT
 spyder
 ```
-
-Open "invert.py" from the example folder inside your IDE an click on the play button\
+Open "invert.py" from the example folder inside your spyder IDE an click on the play button\
 ![Capture d’écran du 2023-12-20 16-46-57](https://github.com/mllinares/pymds_dev/assets/126869078/5bf5ee0c-0af3-4ebd-9e2c-f25f729b8f1c)
 
 Or from terminal window inside the "example" directory run :
 ```
+conda activate NAME_OF_YOUR_ENVIRONMENT
 nohup python3 invert.py
 ```
 A progress bar indicates the progression of the algorithm\
