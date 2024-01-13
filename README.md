@@ -3,8 +3,10 @@ Dev repo of pymds, test for the true repo
 
 Install
 -------
-Download the package and extract it in your working directory. If your python install does not meet the following requirements, create a virtual environment and install the libraries.
-
+Anaconda is required, link to doawload Anaconda:\
+```
+https://www.anaconda.com/download
+```
 Requirements :
 - Python 3.10.9
 - Pyro-ppl 1.8.4
