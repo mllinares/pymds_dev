@@ -18,7 +18,7 @@ Requirements :
   
 Creating a virtual environment and installing necessary libraries
 ------------------------------------------------------------------
-1) Linux/Mac OS
+1) Linux/Mac OS\
 From your terminal enter the following commands
 
 ```
@@ -32,7 +32,7 @@ To intall the devellopment version of pyro (required to use RandomWalk kernel, s
 ```
 pip install git+https://github.com/pyro-ppl/pyro.git
 ```
-2) Windows
+2) Windows\
 Open Anaconda prompt and enter the following commands
 ```
 conda create -n NAME_OF_YOUR_ENVIRONMENT matplotlib numpy scipy git jupyter spyder
