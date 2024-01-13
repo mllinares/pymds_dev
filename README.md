@@ -18,9 +18,8 @@ Requirements :
   
 Creating a virtual environment and installing necessary libraries
 ------------------------------------------------------------------
-With Conda/Miniconda: 
-
-From your terminal : enter the following command
+1) Linux/Mac OS
+From your terminal enter the following commands
 
 ```
 conda create -n NAME_OF_YOUR_ENVIRONMENT matplotlib numpy scipy git jupyter spyder
@@ -33,7 +32,19 @@ To intall the devellopment version of pyro (required to use RandomWalk kernel, s
 ```
 pip install git+https://github.com/pyro-ppl/pyro.git
 ```
-
+2) Windows
+Open Anaconda prompt and enter the following commands
+```
+conda create -n NAME_OF_YOUR_ENVIRONMENT matplotlib numpy scipy git jupyter spyder
+conda activate NAME_OF_YOUR_ENVIRONMENT
+conda install conda-forge::pyro-ppl
+conda install conda-forge::ruptures
+```
+Note : Spyder is a python IDE and its installation is not required you can use a different one (PyCharm, Visual Studio, ...). Jupyter is required for the tutorial.\
+To intall the devellopment version of pyro (required to use RandomWalk kernel, see below):
+```
+pip install git+https://github.com/pyro-ppl/pyro.git
+```
 Check out your installation:
 ----------------------------
 In your terminal, go to the downloaded package directory, enter the following commands:
