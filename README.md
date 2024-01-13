@@ -21,7 +21,7 @@ With Conda/Miniconda:
 From your terminal : enter the following command
 
 ```
-conda create -n NAME_OF_YOUR_ENVIRONMENT matplotlib numpy scipy spyder
+conda create -n NAME_OF_YOUR_ENVIRONMENT matplotlib numpy scipy spyder git
 conda activate NAME_OF_YOUR_ENVIRONMENT
 conda install conda-forge::pyro-ppl
 conda install conda-forge::ruptures
