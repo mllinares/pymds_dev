@@ -21,12 +21,12 @@ With Conda/Miniconda:
 From your terminal : enter the following command
 
 ```
-conda create -n NAME_OF_YOUR_ENVIRONMENT matplotlib numpy scipy spyder git
+conda create -n NAME_OF_YOUR_ENVIRONMENT matplotlib numpy scipy git jupyter spyder
 conda activate NAME_OF_YOUR_ENVIRONMENT
 conda install conda-forge::pyro-ppl
 conda install conda-forge::ruptures
 ```
-Spyder is a python IDE, you can use a different one (PyCharm, Visual Studio, ...)
+Note : Spyder is a python IDE and its installation is not required you can use a different one (PyCharm, Visual Studio, ...). Jupyter is required for the tutorial.
 
 Check out your installation:
 ----------------------------
