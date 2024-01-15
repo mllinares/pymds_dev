@@ -3,7 +3,7 @@ Dev repo of pymds, test for the true repo
 
 Install
 -------
-Anaconda is required, link to doawload Anaconda:
+Anaconda is required, link to download Anaconda:
 ```
 https://www.anaconda.com/download
 ```
