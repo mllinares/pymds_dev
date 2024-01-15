@@ -47,12 +47,10 @@ pip install git+https://github.com/pyro-ppl/pyro.git
 ```
 Check out your installation:
 ----------------------------
-In your terminal, go to the downloaded package directory, enter the following commands:
+From a terminal window, go to the downloaded package directory ```cd *PATH TO PACKAGE*``` and enter the following commands:
 ```
-cd *PATH TO PACKAGE*
-cd tests
 conda activate NAME_OF_YOUR_ENVIRONMENT
-python3 run_test.py
+python3 test_install.py
 ```
 Success message should print on the terminal window
 
