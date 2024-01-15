@@ -3,7 +3,7 @@ Dev repo of pymds, test for the true repo
 
 Install
 -------
-Donwload and extract the package\
+Donwload and extract the package
 
 Anaconda is required, link to download Anaconda:
 ```
