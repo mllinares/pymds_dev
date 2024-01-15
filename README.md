@@ -78,9 +78,14 @@ geometric_scaling_factors : module containing functions for the scling associate
 Example on synthetic dataset
 ----------------------------
 Usage of a python IDE strongly recommended!
-1) Modify the invert.py\
-Before running the inversion there are some parameters that you can tune:
-In the invert.py file you can modify some of the MCMC parameters like the number of steps during the warm-up and sampling phase, the depth of the probability tree and the target acceptancy probability.
+
+1) Modify the ```invert.py``` file\
+The number of events needs to be set, in our case there are 3 earthquakes.
+```python
+number_of_events = 3
+```
+
+You can notice some parameters that you can tune like the number of steps during the warm-up and sampling phase, the depth of the probability tree and the target acceptancy probability. All have an in impact on the efficeincy of the parameter search. The important thing is that the tree depth and warm up can be set to low values to cut the runtime without impacting the results. You can test the impact of modifying those on a simple linear function (see jupyter notebook ```quick_pyro_intro.ipynb```).
 
 ```python
 """ MCMC parameters, to be set with CAUTION """
@@ -90,10 +95,10 @@ nb_sample = 1000 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
 target_prob = 0.9 # target acceptancy probability (<1)
 ```
-You can also modify the parameters you whish to invert : ages are always inverted, but you can choose to invert the slips associated to each event by setting ```invert_slips``` to ```True```.
-Alternatively, you can use the rupture package to find the ruputures by setting ```invert_slips``` to ```False``` and ```use_rpt``` to ```True```. If both ```invert_slips``` and ```use_rpt``` are set to ```False```, then the slips used are the one present in ```seismic_scenario.py```.
+You can also modify the parameters you whish to invert : ages are always inverted, but you can choose to invert the slips associated to each event by setting ```invert_slips = True```.
+Alternatively, you can use the rupture package to find the ruptures by setting ```invert_slips = False``` and ```use_rpt = True```. If both ```invert_slips``` and ```use_rpt``` are set to ```False```, then the slips used are the one present in ```seismic_scenario.py```.
 
-You can also invert the long term slip rate by setting ```invert_sr``` to ```True```, if set to ```False```, the slip rate (SR) used is the one entered in ```seismic_scenario.py```.
+You can also invert the long term slip rate by setting ```invert_sr = True```, if set to ```False```, the slip rate (SR) used is the one entered in ```seismic_scenario.py```.
 ```python
 """ Chose parameters to invert """
 invert_slips = False # invert slip array ?
@@ -119,10 +124,13 @@ tree_depth = 1 # maximum probability tree depth (min: 4, max: 10)
 target_prob = 0.9 # target acceptancy probability (<1)
 
 ```
-This should take approximatly 3h to run on a standard computer (CPU i7-1165G7 @ 2.80GHz × 8). If your specks are lower than those, the algorithm may take longer to complete.
+This should take approximatly 3h to run on a standard home computer (CPU intel i7-1165G7, 2.80GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete.
 
 2) Run invert.py
-from terminal window (does not require to be in a specific working directory):
+
+  a. In a python IDE
+  
+From terminal window (does not require to be in a specific working directory):
 ```
 conda activate NAME_OF_YOUR_ENVIRONMENT
 spyder
@@ -130,7 +138,7 @@ spyder
 Open "invert.py" from the example folder inside your spyder IDE an click on the play button\
 ![Capture d’écran du 2023-12-20 16-46-57](https://github.com/mllinares/pymds_dev/assets/126869078/5bf5ee0c-0af3-4ebd-9e2c-f25f729b8f1c)
 
-Or from terminal window inside the "example" directory run :
+  b. From terminal window inside the "example" directory run :
 ```
 conda activate NAME_OF_YOUR_ENVIRONMENT
 nohup python3 invert.py
@@ -187,7 +195,7 @@ How to use on true dataset
 ```
 3) Modify seismic_scenario.py :
 If you have constraints on the following parameters, fill in the arrays.
-If not, do NOT modify this file but keep in mind that more you have constraints (i. e. on the slip rate or pre-exposure) the faster the algorithm
+If not, do NOT modify this file but keep in mind that more you have constraints (i. e. on the slip, slip rate or pre-exposure) the faster the algorithm
 ```python
 seismic_scenario['ages'] = np.array([]) # exhumation ages, older to younger (yr)
 seismic_scenario['slips'] = np.array([]) # slip corresponding to the events (cm)
@@ -206,7 +214,7 @@ tree_depth = 1 # maximum probability tree depth (min: 4, max: 10)
 target_prob = 0.9 # target acceptancy probability (<1)
 ```
 It is recommended to first test the algorithm without the warmup, low number of samples, low tree depth and low target acceptancy probaility and then increase those.
-As discussed in the paper, the algorithm performs better with low warm_up steps.
+As discussed in the paper, the algorithm performs better with low warm_up steps and low tree depth.
 If you have no idea of what those are, it is recommended that you download the jupyter notebook ```quick_pyro_intro.ipynb``` before using pymds on true datasets.
 
 Link to previous publications
