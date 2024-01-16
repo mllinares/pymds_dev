@@ -135,7 +135,7 @@ target_prob = 0.7 # target acceptancy probability (<1)
 How to use on true dataset
 --------------------------
 Usage of a supercomputer recommended!\
-Since you usually do not know the number of earthquakes, you will need to run in parallel inversions with variying number of earthquakes and determine the minimum number of earthquakes afterward through an elbow method.\
+Since you usually do not know the number of earthquakes, you will need to run in parallel inversions with variying number of earthquakes and determine the minimum number of earthquakes afterward through an elbow method (i.e. plot of RMSw vs number of earthquakes). This allows you to determine the minimum number of earthquakes necessary to explain th observed 36Cl profile.
 
 1) Copy and paste your datafiles, in .csv format (delimiter must be ',')
 2) Modify the following inside the "parameters.py" file according to your own site:
