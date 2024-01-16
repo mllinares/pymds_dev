@@ -1,0 +1,16 @@
+MCMC done 
+ start time: 15/01/2024 15:03:57 runtime: 3.58 hours 
+
+
+ SUMMARY 9m_numpy_hmax  
+  warmup :  10 | samples :  4000  
+ tree depth : 1  |target acceptancy : 0.9 
+
+  age : [7067.38954219 2557.43545004  707.38860394] 
+  rhat_age : [1.17259078 1.11468603 1.46774413]
+
+  divergences : 8
+
+  RMSw on median model :  58.97746949733502
+
+Time for plotting :  850.95 min
