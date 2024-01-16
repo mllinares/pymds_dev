@@ -3,9 +3,9 @@ Dev repo of pymds, test for the true repo
 
 Install
 -------
-Donwload and extract the package
+1) Download and extract the package
 
-Anaconda is required, link to download Anaconda:
+2) Anaconda is required, link to download Anaconda:
 ```
 https://www.anaconda.com/download
 ```
@@ -43,7 +43,7 @@ conda install conda-forge::pyro-ppl
 conda install conda-forge::ruptures
 ```
 Note : Spyder is a python IDE and its installation is not required you can use a different one (PyCharm, Visual Studio, ...). Jupyter is required for the tutorial.\
-To intall the devellopment version of pyro (required to use RandomWalk kernel, see below):
+To intall the devellopment version of pyro (required to use RandomWalk kernel, see section NUTS or RandomWalk):
 ```
 pip install git+https://github.com/pyro-ppl/pyro.git
 ```
@@ -52,7 +52,7 @@ Check out your installation:
 From a terminal window, go to the downloaded package directory ```cd *PATH TO PACKAGE*``` and enter the following commands:
 ```
 conda activate NAME_OF_YOUR_ENVIRONMENT
-python3 test_install.py
+python3 test_install.py 
 ```
 Success message should print on the terminal window
 
