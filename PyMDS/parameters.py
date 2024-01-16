@@ -12,7 +12,7 @@ import numpy as np
 class param:
     """ This class contains all the site parameters needed for the inversion """
     def __init__(self):
-        self.site_name='9m_numpy_hmax'
+        self.site_name='ma3'
         self.rho_rock = 2.66 # rock mean density
         self.rho_coll = 1.5 # colluvium mean density
         self.alpha = 25 # colluvium dip (degrees)
@@ -21,7 +21,7 @@ class param:
         self.erosion_rate = 0 # Erosion rate (mm/yr)
         self.trench_depth = 0 # trench depth (cm)
         self.long_term_relief = 500 * 1e2 # cumulative height due to long term history (cm)
-        self.data = np.loadtxt('data_out.csv', delimiter=',') # samples chemestry
+        self.data = np.loadtxt('data.csv', delimiter=',') # samples chemestry
         self.coll = np.loadtxt('coll.csv', delimiter=',') # colluvial wedge chemistry
         self.sf = np.loadtxt('sf.csv', delimiter=',') # scaling factors for neutrons and muons reactions
         
