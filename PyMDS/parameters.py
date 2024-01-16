@@ -22,8 +22,8 @@ class param:
         self.trench_depth = 0 # trench depth (cm)
         self.long_term_relief = 500 * 1e2 # cumulative height due to long term history (cm)
         self.data = np.loadtxt('data_out.csv', delimiter=',') # samples chemestry
-        self.coll = np.loadtxt('coll.txt') # colluvial wedge chemistry
-        self.sf = np.loadtxt('sf.txt') # scaling factors for neutrons and muons reactions
+        self.coll = np.loadtxt('coll.csv', delimiter=',') # colluvial wedge chemistry
+        self.sf = np.loadtxt('sf.csv', delimiter=',') # scaling factors for neutrons and muons reactions
         
         self.cl36AMS = self.data[:, 64]
         self.sig_cl36AMS = self.data[:,65]
