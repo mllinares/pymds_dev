@@ -195,7 +195,7 @@ If you look at the example on synthetic dataset, you can see that the most recen
 
 NUTS or RandomWalk ?
 ------------------
-Both give equivalent results in equivalent runtime. You can use either one.
+Both give equivalent results in equivalent runtime, if you use NUTS with low tree depth and low warmup wich mimics the behaviour of a random walk.
 
 Link to publication
 --------------------
