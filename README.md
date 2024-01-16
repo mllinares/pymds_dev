@@ -64,7 +64,8 @@ Note : You can generate your own synthetic files with the ``` generate_synthetic
 
 You can run the inversion either from python IDE or through command lines:
 
-a) With Spyder:\
+a) With Spyder
+
 From terminal window (does not require to be in a specific working directory):
 ```
 conda activate NAME_OF_YOUR_ENVIRONMENT
@@ -72,15 +73,20 @@ spyder
 ```
 Open "invert.py" from the example folder inside your spyder IDE an click on the play button
 
+
 b) With command lines
 
-
-Inside the example folder you can find the expected results for the following MCMC parametrization
-The number of events needs to be set, in our case there are 3 earthquakes.
-
-```python
-number_of_events = 3
+From terminal window inside the "example" directory :
 ```
+conda activate NAME_OF_YOUR_ENVIRONMENT
+nohup python3 invert.py
+```
+This should take approximatly 3h to run on a standard home computer (CPU intel i7-1165G7, 2.80GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete.
+
+In this example, only the ages are searched and you should generate the same following plots.
+
+
+Inside the example folder, you can find a folder called ```expected_results``` wich contains the expected plots and result files
 
 You can notice some parameters that you can tune like the number of steps during the warm-up and sampling phase, the depth of the probability tree and the target acceptancy probability. All have an in impact on the efficeincy of the parameter search. The important thing is that the tree depth and warm up can be set to low values to cut the runtime without impacting the results. You can test the impact of modifying those on a simple linear function (see jupyter notebook ```quick_pyro_intro.ipynb```).
 
@@ -120,13 +126,11 @@ tree_depth = 1 # maximum probability tree depth (min: 4, max: 10)
 target_prob = 0.9 # target acceptancy probability (<1)
 
 ```
-This should take approximatly 3h to run on a standard home computer (CPU intel i7-1165G7, 2.80GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete.
 
-  b. From terminal window inside the "example" directory run :
-```
-conda activate NAME_OF_YOUR_ENVIRONMENT
-nohup python3 invert.py
-```
+
+
+
+
 A progress bar indicates the progression of the algorithm\
 ![Capture d’écran du 2023-12-20 16-40-56](https://github.com/mllinares/pymds_dev/assets/126869078/83afc528-217d-485e-935f-2da3c2bb906f)
 
