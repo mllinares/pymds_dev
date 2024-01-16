@@ -5,7 +5,8 @@ Install
 -------
 1) Download and extract the package
 
-2) Anaconda is required, link to download Anaconda:
+2) Install Anaconda and required libraries
+Anaconda is required to install the libraries, link to Anaconda
 ```
 https://www.anaconda.com/download
 ```
