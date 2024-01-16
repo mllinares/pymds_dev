@@ -39,10 +39,11 @@ Success message should print on the terminal window
 
 Package description
 -------------------
+PyMDS
 1) Data files\
-data.csv : datafile of the rock chemestry\
-coll.csv : datafile of the colluvium chemestry\
-sf.csv : datafile of the magnetic field factors\
+data.csv : datafile of the rock chemistry (you can use your own)\
+coll.csv : datafile of the colluvium chemistry (you can use your own)\
+sf.csv : datafile of the magnetic field factors (you can use your own)\
 constants.py : dictionary of all constants\
 parameters.py : python class containing the site parameters (to be modified for each site!)\
 seismic_scenario.py : true seismic scenario, you can use this file to set some paramters of the seismic scenario
@@ -55,6 +56,10 @@ invert.py : invert your datafile
 util folder : contains utlitary functions\
 chemestry_scaling.py : module containing functions for the chemestry scaling\
 geometric_scaling_factors : module containing functions for the scling associated to the geometry of the scarp
+
+example folder:
+An example (discribed in next section)
+Tutorials folder : tutorial jupyter notebooks to get familiar with Pyro and Python
 
 Example on synthetic dataset
 ----------------------------
@@ -81,7 +86,7 @@ From terminal window inside the "example" directory :
 conda activate NAME_OF_YOUR_ENVIRONMENT
 nohup python3 invert.py
 ```
-This should take approximatly 3h to run on a standard home computer (CPU intel i7-1165G7, 2.80GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete.
+This should take approximatly 3h to run on a standard home computer (CPU intel i7-1165G7, 2.80GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete. 
 
 In this example, only the ages are searched and you should generate the same following plots.
 
@@ -167,7 +172,7 @@ seismic_scenario['preexp'] = 0 # Pre-exposition period (yr)
 seismic_scenario['quiescence'] = 0 # Quiescence period (yr)
 ```
 
-4) Modify number of earthquake and MCMC parameters in the invert.py script
+4) Modify number of earthquake and MCMC parameters in the ```invert.py``` script
 ```python
 """ Input seismic scenario """
 seismic_scenario={}
@@ -192,7 +197,7 @@ Interpret your outputs
 ----------------------
 In the ```summary.txt``` file you can find a "r_hat" value associated to all of your inverted parameters, this value is ideally equal to 1 to 1.1. If your r_hat values are higher (close to 2), you need to rethink your a-priori inputs (fix the slips with the ruptures package or with other data like roughness analysis on the fault plane and/or fix the slip rate) or increase the number of sampling steps.
 
-If you look at the example on synthetic dataset, you can see that the most recent age found is ~700 BCE with a r_hat=1.7, this means that the value is close to the solution but you can do better. A solution would be to increase the number of sampling steps (we can see in the event3.png that the value is not stabilized).
+If you look at the provided example on synthetic dataset, you can see that the most recent age found is ~700 BCE with a r_hat=1.7, this means that the value is close to the solution but you can do better. A solution would be to increase the number of sampling steps (we can see in the event3.png that the value is not stabilized).
 
 NUTS or RandomWalk ?
 ------------------
