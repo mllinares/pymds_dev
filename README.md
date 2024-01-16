@@ -6,23 +6,14 @@ Install
 1) Download and extract the package
 
 2) Install Anaconda and required libraries
-Anaconda is required to install the libraries, link to Anaconda
-```
-https://www.anaconda.com/download
-```
-Requirements :
-- Python 3.10.9
-- Pyro-ppl 1.8.4
-- Pyro-api 0.1.2
-- Numpy 1.23.5
-- Matplotlib 3.7.0
-- Scipy 1.1.10
-- Ruptures 1.0.6
-  
-Creating a virtual environment and installing necessary libraries
-------------------------------------------------------------------
-1) Linux/Mac OS\
-From your terminal enter the following commands
+   
+   Anaconda is required to install the libraries, link to Anaconda
+   ```
+   https://www.anaconda.com/download
+   ```
+4) Create a virtual environment and install necessary libraries
+
+On Linux/MAC enter the following commands in a terminal, on Windows 10/11 enter the commands in Anaconda prompt terminal
 
 ```
 conda create -n NAME_OF_YOUR_ENVIRONMENT matplotlib numpy scipy git jupyter spyder
@@ -30,27 +21,16 @@ conda activate NAME_OF_YOUR_ENVIRONMENT
 conda install conda-forge::pyro-ppl
 conda install conda-forge::ruptures
 ```
-Note : Spyder is a python IDE and its installation is not required you can use a different one (PyCharm, Visual Studio, ...). Jupyter is required for the tutorial.\
-To intall the devellopment version of pyro (required to use RandomWalk kernel, see below):
-```
-pip install git+https://github.com/pyro-ppl/pyro.git
-```
-2) Windows\
-Open Anaconda prompt and enter the following commands
-```
-conda create -n NAME_OF_YOUR_ENVIRONMENT matplotlib numpy scipy git jupyter spyder
-conda activate NAME_OF_YOUR_ENVIRONMENT
-conda install conda-forge::pyro-ppl
-conda install conda-forge::ruptures
-```
-Note : Spyder is a python IDE and its installation is not required you can use a different one (PyCharm, Visual Studio, ...). Jupyter is required for the tutorial.\
+Note : Spyder is a python IDE and its installation is not required you can use a different one (PyCharm, Visual Studio, ...). Jupyter is required for the tutorial.
+
 To intall the devellopment version of pyro (required to use RandomWalk kernel, see section NUTS or RandomWalk):
 ```
 pip install git+https://github.com/pyro-ppl/pyro.git
 ```
-Check out your installation:
+
+Check out your installation
 ----------------------------
-From a terminal window, go to the downloaded package directory ```cd *PATH TO PACKAGE*``` and enter the following commands:
+From a terminal window (or Anaconda prompt), go to the downloaded package directory ```cd *PATH TO PACKAGE*``` and enter the following commands:
 ```
 conda activate NAME_OF_YOUR_ENVIRONMENT
 python3 test_install.py 
@@ -78,10 +58,26 @@ geometric_scaling_factors : module containing functions for the scling associate
 
 Example on synthetic dataset
 ----------------------------
-Usage of a python IDE strongly recommended!
+Usage of a python IDE strongly recommended!\
+An Example folder is provided with synthetic dataset corresponding to the following scenario : 3 earthquakes (7000, 2500, 500 BCE), each generating 300 cm of displacement, slip rate of 0.3 mm/yr\
+Note : You can generate your own synthetic files with the ``` generate_synthetics.py``` script.
 
-1) Modify the ```invert.py``` file\
+You can run the inversion either from python IDE or through command lines:
+
+a) With Spyder:\
+From terminal window (does not require to be in a specific working directory):
+```
+conda activate NAME_OF_YOUR_ENVIRONMENT
+spyder
+```
+Open "invert.py" from the example folder inside your spyder IDE an click on the play button
+
+b) With command lines
+
+
+Inside the example folder you can find the expected results for the following MCMC parametrization
 The number of events needs to be set, in our case there are 3 earthquakes.
+
 ```python
 number_of_events = 3
 ```
@@ -91,15 +87,14 @@ You can notice some parameters that you can tune like the number of steps during
 ```python
 """ MCMC parameters, to be set with CAUTION """
 pyro.set_rng_seed(20)
-w_step = 0  # number of warmup step
-nb_sample = 1000 # number of samples
+w_step = 10  # number of warmup step
+nb_sample = 4000 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
 target_prob = 0.9 # target acceptancy probability (<1)
 ```
 You can also modify the parameters you whish to invert : ages are always inverted, but you can choose to invert the slips associated to each event by setting ```invert_slips = True```.
-Alternatively, you can use the rupture package to find the ruptures by setting ```invert_slips = False``` and ```use_rpt = True```. If both ```invert_slips``` and ```use_rpt``` are set to ```False```, then the slips used are the one present in ```seismic_scenario.py```.
-
-You can also invert the long term slip rate by setting ```invert_sr = True```, if set to ```False```, the slip rate (SR) used is the one entered in ```seismic_scenario.py```.
+Alternatively, you can use the rupture package to find the ruptures by setting ```invert_slips = False``` and ```use_rpt = True```. If both ```invert_slips``` and ```use_rpt``` are set to ```False```, then the slips used are the one present in ```seismic_scenario.py```.\
+You can also invert the long term slip rate by setting ```invert_sr = True```, if set to ```False```, the slip rate (SR) used is the one entered in ```seismic_scenario.py```.\
 ```python
 """ Chose parameters to invert """
 invert_slips = False # invert slip array ?
@@ -126,18 +121,6 @@ target_prob = 0.9 # target acceptancy probability (<1)
 
 ```
 This should take approximatly 3h to run on a standard home computer (CPU intel i7-1165G7, 2.80GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete.
-
-2) Run invert.py
-
-  a. In a python IDE
-  
-From terminal window (does not require to be in a specific working directory):
-```
-conda activate NAME_OF_YOUR_ENVIRONMENT
-spyder
-```
-Open "invert.py" from the example folder inside your spyder IDE an click on the play button\
-![Capture d’écran du 2023-12-20 16-46-57](https://github.com/mllinares/pymds_dev/assets/126869078/5bf5ee0c-0af3-4ebd-9e2c-f25f729b8f1c)
 
   b. From terminal window inside the "example" directory run :
 ```
