@@ -64,7 +64,7 @@ Tutorials folder : tutorial jupyter notebooks to get familiar with Pyro and Pyth
 Example on synthetic dataset
 ----------------------------
 Usage of a python IDE strongly recommended!\
-An Example folder is provided with synthetic dataset corresponding to the following scenario : 3 earthquakes (7000, 2500, 500 BCE), each generating 300 cm of displacement, slip rate of 0.3 mm/yr\
+An ```example``` folder is provided with synthetic dataset corresponding to the following scenario : 3 earthquakes (7000, 2500, 500 BCE), each generating 300 cm of displacement, slip rate of 0.3 mm/yr. In this example, only the ages are searched.\
 Note : You can generate your own synthetic files with the ``` generate_synthetics.py``` script.
 
 You can run the inversion either from python IDE or through command lines:
@@ -86,9 +86,8 @@ From terminal window inside the "example" directory :
 conda activate NAME_OF_YOUR_ENVIRONMENT
 nohup python3 invert.py
 ```
-This should take approximatly 3h to run on a standard home computer (CPU intel i7-1165G7, 2.80GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete. 
-
-In this example, only the ages are searched and you should generate the same following plots.
+This should take approximatly 3h to run on a standard home computer (CPU intel i7-1165G7, 2.80GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete.\
+The result can and useful informations be found in ```summary.txt file```, the following plots should be generated:
 
 ![result](https://github.com/mllinares/pymds_dev/assets/126869078/ee8dc628-b5a7-4ad4-8ea9-92c840aa3118)
 
