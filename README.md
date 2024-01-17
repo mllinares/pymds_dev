@@ -55,19 +55,18 @@ chemestry_scaling.py : module containing functions for the chemestry scaling\
 geometric_scaling_factors : module containing functions for the scling associated to the geometry of the scarp
 
 ```format_your_data folder```:\
-Contains script and info to format your datafiles
+Contains script and info to format your datafiles\
+txt2csv.py : convert your .txt file to .csv\
+format.xls : exemple sheet for the data.csv file 
+
+```example folder```:\
+An example (discribed in next section)\
+Tutorials folder : tutorial jupyter notebooks to get familiar with Pyro and Python
 
 PyMDS requires the following data files to run\
 data.csv : datafile of the rock chemistry (you can use your own)\
 coll.csv : datafile of the colluvium chemistry (you can use your own)\
 sf.csv : datafile of the magnetic field factors (you can use your own)\
-
-txt2csv.py : convert your .txt file to .csv
-format.xls : exemple sheet for the data.csv file 
-
-```example folder```:
-An example (discribed in next section)
-Tutorials folder : tutorial jupyter notebooks to get familiar with Pyro and Python
 
 Example on synthetic dataset
 ----------------------------
