@@ -40,10 +40,7 @@ Success message should print on the terminal window
 Package description
 -------------------
 PyMDS
-1) Data files\
-data.csv : datafile of the rock chemistry (you can use your own)\
-coll.csv : datafile of the colluvium chemistry (you can use your own)\
-sf.csv : datafile of the magnetic field factors (you can use your own)\
+1) Constants and parameter files
 constants.py : dictionary of all constants\
 parameters.py : python class containing the site parameters (to be modified for each site!)\
 seismic_scenario.py : true seismic scenario, you can use this file to set some paramters of the seismic scenario
@@ -57,7 +54,18 @@ util folder : contains utlitary functions\
 chemestry_scaling.py : module containing functions for the chemestry scaling\
 geometric_scaling_factors : module containing functions for the scling associated to the geometry of the scarp
 
-example folder:
+```format_your_data folder```:\
+Contains script and info to format your datafiles
+
+PyMDS requires the following data files to run\
+data.csv : datafile of the rock chemistry (you can use your own)\
+coll.csv : datafile of the colluvium chemistry (you can use your own)\
+sf.csv : datafile of the magnetic field factors (you can use your own)\
+
+txt2csv.py : convert your .txt file to .csv
+format.xls : exemple sheet for the data.csv file 
+
+```example folder```:
 An example (discribed in next section)
 Tutorials folder : tutorial jupyter notebooks to get familiar with Pyro and Python
 
@@ -141,8 +149,8 @@ How to use on true dataset
 Usage of a supercomputer recommended!\
 Since you usually do not know the number of earthquakes, you will need to run in parallel inversions with variying number of earthquakes and determine the minimum number of earthquakes afterward through an elbow method (i.e. plot of RMSw vs number of earthquakes). This allows you to determine the minimum number of earthquakes necessary to explain th observed 36Cl profile.
 
-1) Copy and paste your datafiles in the package folder, in .csv format (delimiter must be ',').\
-If your datafile names do not correspond to 'data.csv' for rock chemistry, 'coll.csv' for the colluvium chemistry and 'sf.csv' for the magnetic field factors, rename them.
+1) Copy and paste your datafiles in the package folder, in .csv format (delimiter must be ','), you can find a script to convert into csv format your files.\
+If your datafile names do not correspond to 'data.csv' for rock chemistry, 'coll.csv' for the colluvium chemistry and 'sf.csv' for the magnetic field factors, rename them or change the name in parameter.py.
 2) Modify the following inside the "parameters.py" file according to your own site:
 
 ```python
