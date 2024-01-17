@@ -207,8 +207,21 @@ If you look at the provided example on synthetic dataset, you can see that the m
 
 NUTS or RandomWalk ?
 ------------------
-Both give equivalent results in equivalent runtime, if you use NUTS with low tree depth and low warmup wich mimics the behaviour of a random walk.
-
+Both give equivalent results in equivalent runtime. Usage of RandomWalk:\
+import the RandomWalk kernel:
+```python
+from pyro.infer import MCMC, NUTS, RandomWalkKernel
+```
+The RandomWalk kernel does not take tree depth argument, here is an example to call it:
+```python
+""" Running MCMC """
+kernel = RandomWalkKernel(model, ) # chose kernel (NUTS, HMC, ...)
+mcmc = MCMC(kernel, warmup_steps=w_step, num_samples=nb_sample) 
+```
+There is no computation of divergences so you will need to comment the following line:
+```python
+print('\n  divergences :', len(mcmc.diagnostics()['divergences']['chain 0']))
+```
 Link to publication
 --------------------
 If you use PyMDS in a research paper, please consider citing the associated paper ....
