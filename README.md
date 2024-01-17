@@ -208,7 +208,8 @@ If you look at the provided example on synthetic dataset, you can see that the m
 NUTS or RandomWalk ?
 ------------------
 Both give equivalent results in equivalent runtime. Usage of RandomWalk:\
-import the RandomWalk kernel:
+All the modifications are done in the ```invert.py``` file
+
 ```python
 from pyro.infer import MCMC, NUTS, RandomWalkKernel
 ```
