@@ -105,7 +105,7 @@ When the inversion is done, plots and ".txt" files are generated:
 - RMSw.txt : root mean square associated to the tested cl36 profiles
 - sigma.txt : infered sigma
 - summary.txt : summary of the inversion
-- nohup.out : progression of the algorithm
+- nohup.out : progression of the algorithm (if you use nohup command to run the script)
 - slip.txt : infered slip (if inversed)
 - SR.txt : infered long term slip rate (if inversed)
 
