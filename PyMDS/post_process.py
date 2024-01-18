@@ -328,7 +328,7 @@ def plot_min_max(clAMS, height, inferred_cl36, plot_name='min_max', sigAMS=np.ar
     plt.legend()
     plt.savefig(plot_name+'.png', dpi = 1200)
 
-def plot_2D(Var1, Var2, RMSw, x_label, y_label, title, true_values=np.array([])):
+def plot_2D(Var1, Var2, RMSw, x_label, y_label, title, true_values=np.array([]), median_values=np.array([])):
     
     """ Plot of tested values Var1 vs Var2 during inversion, color varying with RMSw
         INPUTS : Var1, variable 1, np.array
@@ -337,7 +337,8 @@ def plot_2D(Var1, Var2, RMSw, x_label, y_label, title, true_values=np.array([]))
                  x_label, x label, string
                  y_label, y label, string
                  title, title of the plot, also used in naming the saved figure, string
-                 true_value, true value for Var1, Var2, np.array(Var1_true, Var2_true), default=None
+                 true_values, true values for Var1, Var2, np.array(Var1_true, Var2_true), default=None
+                 median_values, inferred values for Var1, Var2, np.array(Var1_true, Var2_true), default=None
         OUTPUT : scatter plot Var1 vs Var2"""
         
     plt.clf() # clear all figure
@@ -345,7 +346,10 @@ def plot_2D(Var1, Var2, RMSw, x_label, y_label, title, true_values=np.array([]))
     plt.title(title)
     plt.scatter(Var1, Var2, c=RMSw, cmap='viridis_r', alpha=0.5)
     if len(true_values)!=0:
-        plt.plot(true_values[0], true_values[1], marker='*', linestyle='', color='firebrick', label='True value')  
+        plt.plot(true_values[0], true_values[1], marker='*', linestyle='', color='firebrick', label='True value')
+        plt.legend()
+    if len(median_values)!=0:
+        plt.plot(median_values[0], median_values[1], marker='*', linestyle='', color='cornflowerblue', label='Infered value', markeredgecolor='navy', markeredgewidth=0.5)  
         plt.legend()
     plt.xlabel(x_label)
     plt.ylabel(y_label)
