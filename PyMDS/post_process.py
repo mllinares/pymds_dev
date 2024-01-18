@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jul 24 11:01:12 2023
+Created on Mon Jul 24 11:01:12 2023 last modification : 12/16/2023
 
 @author: llinares
 """
@@ -11,12 +11,16 @@ import matplotlib.ticker as mtick
 import numpy as np
 import torch
 import ruptures as rpt
+
+
 # %% computational functions
 def RMSw(observed_data, modeled_data, incertitude=np.array([])):
     """ Compute the weighted RMS between two datasets
+    
     INPUTS : observed_data, 1D array
              modeled_data, 1D array
              incertitude, 1D array
+             
     OUTPUT : RMSw, weighted RMS, float"""
     
     if len(incertitude)==0:
@@ -26,6 +30,7 @@ def RMSw(observed_data, modeled_data, incertitude=np.array([])):
     
 def aicc(measurements, calculations, nb_param):
     """ This function allows to calculate the Akaike criterion
+    
         INPUTS : measurements, your data, numpy array
                  calculations, your synthetic data, numpy array
                  nb_param, integer
@@ -42,6 +47,7 @@ def aicc(measurements, calculations, nb_param):
 
 def precompute_slips(cl_36, h_samples, nb_bkps, model_name='rank', double_check=False, max_bkps=5, plot=False):
     """ This function pre-computes the slip array for the inversion (see Truong at al. 2020, rupture package for more info)
+    
         INPUTS : cl_36, cl36 concentration data, array or tensor, shape : (1, nb_samples)
                  h_samples, height of samples, array or tensor, shape : (1, nb_samples)
                  nb_bkps, number of earthquakes, integer
@@ -49,6 +55,7 @@ def precompute_slips(cl_36, h_samples, nb_bkps, model_name='rank', double_check=
                  double_check, use the penalty algorithm to infer minimum ruptures (experimental), boolean, default=False
                  max_bkps, maximum expected number of earthquakes, interger, default=5
                  plot, make plots of infered ruptures, boolean, default=False
+                 
         OUTPUT : slips, slip tensor, torch tensor
                  """
                  
@@ -72,22 +79,22 @@ def precompute_slips(cl_36, h_samples, nb_bkps, model_name='rank', double_check=
 
 # %% data management functions
 def variable_results(number_of_models, variable, posterior_samples):
-    """ Return an array containing the values of posterior samples that are inferred iteratively : e.g. "age"+str(i) = pyro.sample
-    Return also the median and mean values.
+    """ Return an array containing the values of posterior samples that are inferred iteratively : e.g. "age"+str(i) = pyro.sample(...)
+    Returns also the median and mean values.
 
     INPUTS: number_of_models, number of models inferred, int
             variable, name of the variable for which you want to save the result, str
-            posterior_samples, dictionnary conctaining the posterior samples, dict
+            posterior_samples, dictionnary conctaining the posterior samples from pyro MCMC, dict
             
     OUTPUT: save_all, all tested value, 2D array (numpy) shape ((number_of_models, number_of_events))
             median, median value, 1D array (numpy)
             mean, mean value, 1D array (numpy)
             txt file containing tested values
             
-    EX : number_of-models= 100, number_of_events = 3, variable ='age'
-        =>  save_all  = ([age1_model1, age2_model1, age3, model1],...,[age1_model100, age2_model100, age3_model100])
-            median = ([median(age1_model1-100), median(age2_model1_100), median(age3_model1_100)])
-            mean = ([mean(age1_model1-100), mean(age2_model1_100), mean(age3_model1_100)]) """
+    EX : number_of_models= 100, variable ='age', posteterior_samples={[ages1], [ages2], [ages3], ..., [divergences]]}
+        =>  save_all  = ([age1_model1, age2_model1, age3_model1],...,[age1_model100, age2_model100, age3_model100])
+            median = ([median(age1_model1_100), median(age2_model1_100), median(age3_model1_100)])
+            mean = ([mean(age1_model1_100), mean(age2_model1_100), mean(age3_model1_100)]) """
     
     save_all = np.zeros((number_of_models)) # array used to store tested values
 
@@ -203,6 +210,18 @@ def plot_profile(clAMS, sigAMS, height, inferred_cl36, plot_name):
     plt.legend()
     plt.savefig(plot_name+'.png', dpi = 1200)
     
+def plot_rpt(sample_height, cl36_profile, ruptures):
+    """ Plot the ruptures found by the rupture package
+    INPUTS : sample_height, height of the samples, type : 1D array (torch or numpy)
+             cl36_profile, cl36 profile, type : 1D array (torch or numpy)
+             ruptures; ruptures found by the ruptures package, float or 1D array """
+    plt.clf()
+    plt.figure(num=1, figsize=(8.5, 5.3), dpi=1200)
+    plt.plot(cl36_profile, sample_height, marker='.', linestyle='', color='black')
+    plt.hlines(sample_height[ruptures], min(cl36_profile), max(cl36_profile), linestyle = '--', color='lightsteelblue')
+    plt.xlabel('[$^{36}$Cl] (at/g)')
+    plt.ylabel('Height (cm)')
+    plt.savefig('ruptures.png', dpi=1200)
     
 def plot_variable_np(inferred_values, title, var_name, true_value = 1e-38, num_fig = 1):
     
@@ -309,6 +328,30 @@ def plot_min_max(clAMS, height, inferred_cl36, plot_name='min_max', sigAMS=np.ar
     plt.legend()
     plt.savefig(plot_name+'.png', dpi = 1200)
 
+def plot_2D(Var1, Var2, RMSw, x_label, y_label, title, true_values=np.array([])):
+    
+    """ Plot of tested values Var1 vs Var2 during inversion, color varying with RMSw
+        INPUTS : Var1, variable 1, np.array
+                 Var2, variable 2, np.array
+                 RMSw, RMS associated to the model from Var1 and Var2, np.array
+                 x_label, x label, string
+                 y_label, y label, string
+                 title, title of the plot, also used in naming the saved figure, string
+                 true_value, true value for Var1, Var2, np.array(Var1_true, Var2_true), default=None
+        OUTPUT : scatter plot Var1 vs Var2"""
+        
+    plt.clf() # clear all figure
+    plt.figure(figsize=(8.5, 5.3))
+    plt.title(title)
+    plt.scatter(Var1, Var2, c=RMSw, cmap='viridis_r', alpha=0.5)
+    if len(true_values)!=0:
+        plt.plot(true_values[0], true_values[1], marker='*', linestyle='', color='firebrick', label='True value')  
+        plt.legend()
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.colorbar(label='RMSw')
+    plt.savefig(title+'.png', dpi=1200)
+    
 # def plot_time_spent(plot_name='CPU'):
 #     """ CAUTION : you can use this function only if you used the nohup command to launch the inversion """
     
