@@ -40,7 +40,7 @@ Success message should print on the terminal window
 Package description
 -------------------
 PyMDS
-1) Constants and parameter files
+1) Constants and parameter files\
 constants.py : dictionary of all constants\
 parameters.py : python class containing the site parameters (to be modified for each site!)\
 seismic_scenario.py : true seismic scenario, you can use this file to set some paramters of the seismic scenario
