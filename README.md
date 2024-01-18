@@ -23,7 +23,7 @@ conda install conda-forge::ruptures
 ```
 Note : Spyder is a python IDE and its installation is not required you can use a different one (PyCharm, Visual Studio, ...). Jupyter is required for the tutorial.
 
-To intall the devellopment version of pyro (required to use RandomWalk kernel, see section NUTS or RandomWalk):
+To install the devellopment version of pyro (required to use RandomWalk kernel, see section NUTS or RandomWalk):
 ```
 pip install git+https://github.com/pyro-ppl/pyro.git
 ```
