@@ -23,14 +23,12 @@ from pyro.infer import MCMC, NUTS
 import parameters
 import matplotlib.pyplot as plt
 
-sys.stdout = open('summary.txt', 'w')
-today = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
+today = datetime.now().strftime("%d/%m/%Y %H:%M:%S") # get today's date day/month/year hour:min:sec
 
 """ Input seismic scenario """
-seismic_scenario={}
-erosion_rate = 0 # Erosion rate (mm/yr)
-number_of_events = 3
-seismic_scenario['erosion_rate'] = erosion_rate
+seismic_scenario={} # open new dict to create seismic scenario
+number_of_events = 3 # enter the number of event
 
 """ Input parameters"""
 param=parameters.param()
@@ -59,16 +57,17 @@ target_prob = 0.9 # target acceptancy probability (<1)
 
 if invert_slips == False and use_rpt == True:
     import ruptures as rpt
-    algo = rpt.Dynp(model='rank', min_size=5, jump=1).fit(cl36AMS) # l1, l2, normal, rbf, rank
+    algo = rpt.Dynp(model='rank', min_size=5, jump=1).fit(cl36AMS) # available (l1, normal, rbf, rank), min_size : min len segment, jump : min len between two points
     my_bkps = np.array(algo.predict(n_bkps=number_of_events-1)) # Number of break-ups = nb_ev-1 
-    my_bkps[-1]=my_bkps[-1]-1
-    my_bkps=np.hstack((0, my_bkps))
-    slips = np.zeros((len(my_bkps)-1))
+    my_bkps[-1]=my_bkps[-1]-1 # Last breakup-1 (solve index problems)
+    my_bkps=np.hstack((0, my_bkps)) # Start from zero to calculate slip amount
+    slips = np.zeros((len(my_bkps)-1)) # Create slip array
     for i in range (0, len(my_bkps)-1):
-        slips[i]=height[my_bkps[i+1]]-(height[my_bkps[i]])
+        slips[i]=height[my_bkps[i+1]]-(height[my_bkps[i]]) # Calculate slip amount for each event
 
     slips_r = torch.tensor(slips[::-1].copy()) # reverse slip array, copy used to construct torch tensor
     seismic_scenario['slips']=slips_r
+    fig.plot_rpt(height, Data, my_bkps) # plot the results of ruptures
     
     
 
