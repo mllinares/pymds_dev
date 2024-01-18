@@ -44,6 +44,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     Z = param.Z
     rho_rock = param.rho_rock
     rho_coll = param.rho_coll
+    epsilon = param.erosion_rate
     
     age_base = seismic_scenario['ages']
     age = age_base.clone().detach().numpy() 
@@ -69,7 +70,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     
     SR = seismic_scenario['SR']
     preexp = seismic_scenario['preexp']
-    epsilon = seismic_scenario['erosion_rate']
+    
     
     
     Lambda_f_e = scaling_factors['Lambda_f_e']
@@ -231,7 +232,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     #     slip = np.hstack((slip, param.trench_depth))
     # # age=torch.tensor([7100, 2900, 260]) 
     
-    # epsilon = seismic_scenario['erosion_rate'] 
+    # epsilon = seismic_scenario[''] 
     # preexp = seismic_scenario['preexp']
 
     # # Constants
