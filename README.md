@@ -43,7 +43,7 @@ PyMDS
 1) Constants and parameter files\
 constants.py : dictionary of all constants\
 parameters.py : python class containing the site parameters (to be modified for each site!)\
-seismic_scenario.py : true seismic scenario, you can use this file to set some paramters of the seismic scenario
+seismic_scenario.py : true seismic scenario, you can use this file to set some parameters of the seismic scenario
 2) Stand alone scripts\
 run_forward.py : run only the forward function\
 plot_data.py : plot the data\
