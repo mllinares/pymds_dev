@@ -6,10 +6,10 @@ Created on Tue Feb 28 12:18:11 2023
 @author: Maureen Llinares
 """
 
+#%% Importing libraries
 import forward_function as forward
 import geometric_scaling_factors
 from datetime import datetime
-# import site_parameters
 from constants import constants
 import torch
 import pyro
@@ -21,14 +21,15 @@ import sys
 from seismic_scenario import seismic_scenario as true_scenario
 from pyro.infer import MCMC, NUTS
 import parameters
-import matplotlib.pyplot as plt
 
+#%% Initialization
 sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
 today = datetime.now().strftime("%d/%m/%Y %H:%M:%S") # get today's date day/month/year hour:min:sec
 
 """ Input seismic scenario """
 seismic_scenario={} # open new dict to create seismic scenario
-number_of_events = 3 # enter the number of event
+number_of_events = 6 # enter the number of event
+true_scenario_known = True # true scenario known? (for plotting purpose)
 
 """ Input parameters"""
 param=parameters.param()
@@ -41,23 +42,23 @@ var_cl36=np.var(cl36AMS)
 
 """ Chose parameters to invert """
 invert_slips = False # invert slip array ?
-use_rpt = False # use rupture package to find slips
-invert_sr = False # invert slip rate ?
+use_rpt = True # use rupture package to find slips
+invert_sr = True # invert slip rate ?
 invert_quies = False # invert quiescence
 
 """ MCMC parameters, to be set with CAUTION """
 tic=time.time()
 pyro.set_rng_seed(20)
 w_step = 10  # number of warmup (~30% of total models)
-nb_sample = 400 # number of samples
+nb_sample = 4000 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
-target_prob = 0.9 # target acceptancy probability (<1)
+target_prob = 0.7 # target acceptancy probability (<1)
 
-""" Find slip with rupture package if use_rpt = True"""
+#%% Find slip with rupture package if use_rpt = True
 
 if invert_slips == False and use_rpt == True:
     import ruptures as rpt
-    algo = rpt.Dynp(model='rank', min_size=5, jump=1).fit(cl36AMS) # available (l1, normal, rbf, rank), min_size : min len segment, jump : min len between two points
+    algo = rpt.Dynp(model='l2', min_size=10, jump=10).fit(cl36AMS) # available (l1, normal, rbf, rank), min_size : min len segment, jump : min len between two points
     my_bkps = np.array(algo.predict(n_bkps=number_of_events-1)) # Number of break-ups = nb_ev-1 
     my_bkps[-1]=my_bkps[-1]-1 # Last breakup-1 (solve index problems)
     my_bkps=np.hstack((0, my_bkps)) # Start from zero to calculate slip amount
@@ -71,10 +72,10 @@ if invert_slips == False and use_rpt == True:
     
     
 
-""" Compute geometric scaling factors """
+#%%Compute geometric scaling factors 
 scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, number_of_events+1)
 
-""" Defining MCMC model """
+#%% Defining MCMC model
 def model(obs):
     
     ages = torch.zeros((number_of_events))
@@ -105,7 +106,7 @@ def model(obs):
     t = forward.mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=200, find_slip = invert_slips)
     return pyro.sample('obs', dist.Normal(t, sigma), obs=obs)
 
-""" Running MCMC """
+#%% Running MCMC
 kernel = NUTS(model, max_tree_depth = tree_depth, target_accept_prob = target_prob, jit_compile=False) # chose kernel (NUTS, HMC, ...)
 mcmc = MCMC(kernel, warmup_steps=w_step, num_samples=nb_sample) 
 mcmc.run(obs=Data)
@@ -113,8 +114,7 @@ posterior_samples = mcmc.get_samples()
 toc=time.time()
 print('MCMC done \n start time:', today,'runtime:', '{0:.2f}'.format((toc-tic)/3600), 'hours \n')
 
-""" Plotting and saving with post_process.py """
-tic_pp=time.time()
+#%% Saving results
 
 # Saving samples
 all_age, median_age, mean_age = fig.array_results(nb_sample, number_of_events, 'age', posterior_samples)
@@ -177,6 +177,7 @@ for i in range (0, len(all_age)):
 np.savetxt('inferred_cl36.txt', all_36cl_models)
 np.savetxt('RMSw_infered_models.txt', all_RMSw)
 
+#%% Get diagnostics and RMSw
 # Get rhat values
 rhat_age=fig.get_rhat_array('age', mcmc.diagnostics(), number_of_events)
 if invert_slips == True:
@@ -185,7 +186,7 @@ if invert_sr == True:
     rhat_sr=fig.get_rhat('SR', mcmc.diagnostics())
 rmsw_median_model=fig.RMSw(param.cl36AMS, cl_36_inferred.detach().numpy(), incertitude=sigAMS)
 
-# printing info on the inversion
+# printing info on the inversion inside summary.txt file
 print('\n SUMMARY', param.site_name, ' \n ', 'warmup : ', w_step, '| samples : ', nb_sample, ' \n tree depth :', tree_depth, ' |target acceptancy :', target_prob, '\n\n  age :', median_age, '\n  rhat_age :', rhat_age)
 if invert_slips == True:
     print('\n  slip :', median_slip_corrected, '\n  rhat_slip :', rhat_slip)
@@ -197,26 +198,62 @@ print('\n  divergences :', len(mcmc.diagnostics()['divergences']['chain 0']))
 print('\n  RMSw on median model : ', rmsw_median_model)
 
 
-# Plotting 
-fig.plot_profile(cl36AMS, param.sig_cl36AMS, height, cl_36_inferred, 'plot_name')
-fig.plot_min_max(cl36AMS, height, all_36cl_models, sigAMS=np.zeros((len(cl36AMS)))+np.min(cl36AMS)*0.1, slips=slip_hlines*1e-2)
+#%% Plotting 
+tic_pp=time.time()
 true_age=true_scenario['ages']
+true_slips=true_scenario['slips']
 
-for i in range (0, number_of_events):
-    fig.plot_variable_np(all_age[:, i], 'Event '+str(i+1), 'Age', true_value=true_age[i], num_fig=i+1)
-    
+""" Plot 36Cl profiles:
+    1) median model with plot profile
+    2) median model and greyfill between all models
+    3) median model and greyfill between the last 70% of all models (when inversion is stable)"""
+fig.plot_profile(cl36AMS, param.sig_cl36AMS, height, cl_36_inferred, 'plot_median')
+fig.plot_min_max(cl36AMS, height, all_36cl_models, sigAMS=np.zeros((len(cl36AMS)))+np.min(cl36AMS)*0.1, slips=slip_hlines*1e-2, plot_name='all_models')
+fig.plot_min_max(cl36AMS, height, all_36cl_models[:,int(0.3*nb_sample)::], sigAMS=np.zeros((len(cl36AMS)))+np.min(cl36AMS)*0.1, slips=slip_hlines*1e-2, plot_name='models_70_percent')
+
+# plot sigma 
 fig.plot_variable_np(all_sigma, 'Sigma', 'Sigma')
 
-if invert_slips == True :
-    true_slips=true_scenario['slips']
+# Plot ages infered through time
+if true_scenario_known == False or number_of_events!=len(true_age):
     for i in range (0, number_of_events):
-        fig.plot_variable_np(all_slip_corrected[:, i], title='Slip '+str(i+1), var_name='Slip',true_value=true_slips[i], num_fig=i+1)
-if invert_sr == True :
-    fig.plot_variable_np(all_sr, 'SR', 'SR (mm/yr)', true_value = true_scenario['SR'])
+        fig.plot_variable_np(all_age[:, i], 'Event '+str(i+1), 'Age', num_fig=i+1) 
+else:
+    for i in range (0, number_of_events):
+        fig.plot_variable_np(all_age[:, i], 'Event '+str(i+1), 'Age', true_value=true_age[i], num_fig=i+1) #true_value=true_age[i],
 
-if invert_slips==True:
-    for i in range (0, number_of_events):
-        fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), true_values=np.array([true_scenario['ages'][i], true_scenario['slips'][i]]))
+# Plot slip throhg time and 2D plots
+if use_rpt==False and invert_slips==True:
+    if true_scenario_known == False and number_of_events!=len(true_slips):
+        for i in range (0, number_of_events):
+            fig.plot_variable_np(all_slip_corrected[:, i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1) 
+            fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+    elif true_scenario_known == True and number_of_events==len(true_slips):
+        for i in range (0, number_of_events):
+            fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), true_values=np.array([true_scenario['ages'][i], true_scenario['slips'][i]]), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+            fig.plot_variable_np(all_slip_corrected[:, i],true_value=true_slips[i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1)
+    elif true_scenario_known==True and number_of_events!=len(true_age):
+        for i in range (0, number_of_events):
+            fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+            fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1)+'_with_true_values', true_values=np.array([true_scenario['ages'].numpy(), true_scenario['slips'].numpy()]), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+
+if invert_sr == True and true_scenario_known==True:
+    fig.plot_variable_np(all_sr, 'SR', 'SR (mm/yr)', true_value = true_scenario['SR'])
+elif invert_sr == True and true_scenario_known==False:
+    fig.plot_variable_np(all_sr, 'SR', 'SR (mm/yr)')
+
+#%%
+# if invert_slips==True and true_scenario_known==True and number_of_events==len(true_age):
+#     for i in range (0, number_of_events):
+#         fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), true_values=np.array([true_scenario['ages'][i], true_scenario['slips'][i]]), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+# elif invert_slips==True and true_scenario_known==True and number_of_events!=len(true_age):
+#     for i in range (0, number_of_events):
+#         fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+#         fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1)+'_with_true_values', true_values=np.array([true_scenario['ages'].numpy(), true_scenario['slips'].numpy()]), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+# elif invert_slips==True and true_scenario_known==False and number_of_events!=len(true_age):
+#     for i in range (0, number_of_events):
+#         fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+    
 toc_pp=time.time()
 
 print('\nTime for plotting : ', '{0:.2f}'.format((toc_pp-tic_pp)/60), 'min')
