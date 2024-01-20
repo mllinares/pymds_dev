@@ -7,7 +7,6 @@ Created on Mon Jul 24 11:01:12 2023 last modification : 12/16/2023
 """
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
-# import pandas as pd
 import numpy as np
 import torch
 import ruptures as rpt
@@ -271,7 +270,7 @@ def plot_variable_np(inferred_values, title, var_name, true_value = 1e-38, num_f
     plt.ylabel('Density')
     plt.legend()
     plt.tight_layout()
-    plt.savefig(title+'.png')
+    plt.savefig(title+'.png', dpi=1200)
     
     
 def plot_min_max(clAMS, height, inferred_cl36, plot_name='min_max', sigAMS=np.array([]), slips=np.array([])):
@@ -343,19 +342,19 @@ def plot_2D(Var1, Var2, RMSw, x_label, y_label, title, true_values=np.array([]),
         
     plt.clf() # clear all figure
     plt.figure(figsize=(8.5, 5.3))
-    plt.title(title)
+    plt.title(title.replace('_', ' '))
     plt.scatter(Var1, Var2, c=RMSw, cmap='viridis_r', alpha=0.5)
     if len(true_values)!=0:
-        plt.plot(true_values[0], true_values[1], marker='*', linestyle='', color='firebrick', label='True value')
+        plt.plot(true_values[0], true_values[1], marker='*', linestyle='', color='firebrick', label='True value', markersize=12)
         plt.legend()
     if len(median_values)!=0:
-        plt.plot(median_values[0], median_values[1], marker='*', linestyle='', color='cornflowerblue', label='Infered value', markeredgecolor='navy', markeredgewidth=0.5)  
+        plt.plot(median_values[0], median_values[1], marker='*', linestyle='', color='cornflowerblue', label='Infered value', markeredgecolor='black', markeredgewidth=0.5, markersize=12)  
         plt.legend()
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.colorbar(label='RMSw')
     plt.savefig(title+'.png', dpi=1200)
-    
+
 # def plot_time_spent(plot_name='CPU'):
 #     """ CAUTION : you can use this function only if you used the nohup command to launch the inversion """
     
