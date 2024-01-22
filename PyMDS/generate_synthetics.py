@@ -8,30 +8,34 @@ Created on Tue Sep 26 14:47:19 2023
 
 import numpy as np
 import geometric_scaling_factors
-# import forward_function
-from constants import constants
 import torch
-# import numpy as np
-from math import pi, sin
-from chemistry_scaling import clrock, clcoll
+import matplotlib.pyplot as plt
+import os
 
 
-def add_noise(input_array, name_file, noise_level, write_data_file, data_file):
+""" Script to generate your synthtetic datafile:
+    1) Edit parameter.py file : 
+       Required : self.data = np.loadtxt('blank.csv', delimiter=',') # samples chemestry
+       Optional : edit other values (angle, density)
+    2) Edit the seismic scenario below (CAUTION the sum of slips should be equal to the eight of your scarp)
+    3) Run the script
+    
+    A plot of your synthetic profile is displayed and the synthtetic data file is saved under 'synthetic_file.csv' """
+
+#%% Functions
+def add_noise(input_array, noise_level=0.8*1e5, write_data_file=False, data_file=''):
     
     """ Add noise to specific dataset.
     INPUTS : input_array, smooth dataset, type : numpy array
-             name_file, name of ouput file, type : str
-             noise_level, level of noise, type : float
-             write_data_file, write cl36 datafile, type : bool
+             noise_level, level of noise, default=0.8*1e5, type : float
+             write_data_file, write cl36 datafile, default=False, type : bool
+             data_file, rock data file, default='', type=np.arra(nb_sample, 66)
             
-    OUTPUTS : "noised" array, type : numpy array
-              .txt file containing the array with noise """
+    OUTPUTS : "noised" array, type : numpy array """
     
     noise = np.array(np.random.randn(len(input_array))) * noise_level # create random noise
     noisy_data = input_array+noise # add noise to your data
-    np.savetxt(name_file+str(noise_level)+'.txt', noisy_data) # saving
-
-
+   
     if write_data_file == True:
         data_out = data_file.copy()
         data_out[:, 64] = noisy_data
@@ -64,41 +68,46 @@ def create_blank_file(number_of_samples=90, regular_spacing=True, spacing=10):
     np.savetxt('blank.csv', synthetic_data_file, delimiter=',')
     return
     
-def gen_synthetic_data(seismic_scenario, blank_datafile):
+def gen_synthetic_data(seismic_scenario, blank_datafile, adding_noise=True, noise_level=0.8*1e5):
      
     """ Generate a synthetic datafile
-    INPUT : seismic_scenario, a seismic scenario, dict
-            scaling_factors, geometric scaling factors (from gscale.py), dict
-            number_of_samples, number of 36Cl samples, int (default 90)
-            regular_spacing, is the space between samples regular, bool (default True)
-            spacing, spasing between 36 Cl samples, float, (default 50)
+    INPUT : seismic_scenario, a seismic scenario,type : dict
+            blank_datafile, a blank datafile generated with the above function, type : 1D  np.array
+            adding_noise, add noise to your synthetic 36cl profile, type : bool
+            noise_level, level of noise, default=0.8*1e5, type : float
             
-    OUTPUT : synthetic_data_file, 2D array shape((number_of_samples, 66))
+    OUTPUT : synthetic_profile, type : 2D array shape((number_of_samples, 66))
              saving of synthetic_data_file, .csv (delim=',') """
              
     import forward_function
     import parameters
     from constants import constants
-    
     param = parameters.param()
-    param.data = np.loadtxt('blank.csv', delimiter=',') # samples chemestry
+        
+    # Scaling factors
+    scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, len(seismic_scenario['ages']))
+   
+    # 36 Cl profile
+    synthetic_profile = forward_function.mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int=100, seis_int=100)
     
-    """ First calculate scaling factors """
-    scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, 3)
-
-
-    synthetic_profile=forward_function.mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=200)
+    # Adding noise
+    if adding_noise==True:
+        np.savetxt('profile_before_noise.csv', synthetic_profile, delimiter=',')
+        synthetic_profile=add_noise(synthetic_profile, noise_level=noise_level)
+   
+    # Writting and saving to file
     blank_datafile[:, 64] = synthetic_profile
     blank_datafile[:, 65] = min(blank_datafile[:,64])*0.1
     np.savetxt('synthetic_file.csv',blank_datafile, delimiter=',')
     return synthetic_profile
 
 
+#%% Main script
 # Seismic scenario stored in a dict
 seismic_scenario={}
-seismic_scenario['ages'] = torch.tensor([7000, 2500, 500]) # exhumation ages, older to younger (yr)
-seismic_scenario['slips'] = torch.tensor([300, 300, 600]) # slip corresponding to the events (cm)
-seismic_scenario['SR'] = 0.3 # long term slip rate of your fault (mm/yr)
+seismic_scenario['ages'] = torch.tensor([9000, 7000, 2500, 500]) # exhumation ages, older to younger (yr)
+seismic_scenario['slips'] = torch.tensor([150, 160,  300, 300]) # slip corresponding to the events (cm)
+seismic_scenario['SR'] = 0.5 # long term slip rate of your fault (mm/yr)
 seismic_scenario['preexp'] = 5*1e3 # Pre-expositionn period (yr)
 seismic_scenario['start_depth'] = seismic_scenario['preexp'] * seismic_scenario['SR'] * 1e-1 # (cm) along the fault plane
 seismic_scenario['quiescence'] = 0*1e3 # Quiescence period (yr), must be older than last event
@@ -110,5 +119,17 @@ if seismic_scenario['quiescence'] !=0 :
 
 # Start creating synthetic datafile
 create_blank_file()
-data_blank=np.loadtxt('blank.csv', delimiter=',')
-synth=gen_synthetic_data(seismic_scenario, data_blank)
+data_blank = np.loadtxt('blank.csv', delimiter=',')
+synth = gen_synthetic_data(seismic_scenario, data_blank, noise_level=4*1e5)
+
+#%% Plotting
+synthetic_data = np.loadtxt('synthetic_file.csv', delimiter=',')
+plt.figure(dpi=1200)
+plt.plot(synth, data_blank[:,62], '.')
+plt.xlabel ('36Cl [at/g]')
+plt.ylabel ('Height (cm)')
+plt.errorbar(synthetic_data[:,64], synthetic_data[:, 62], xerr=synthetic_data[:,65], color='black', alpha=0.4, marker='.', linestyle='', label='Synthetic data')
+if os.path.isfile('profile_before_noise.csv')==True:
+    synthetic_no_noise = np.loadtxt('profile_before_noise.csv', delimiter=',')
+    plt.plot(synthetic_no_noise, synthetic_data[:, 62], marker='', linestyle='-', color='orchid', label='Without noise')
+plt.legend()
