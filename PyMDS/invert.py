@@ -222,7 +222,7 @@ else:
     for i in range (0, number_of_events):
         fig.plot_variable_np(all_age[:, i], 'Event '+str(i+1), 'Age', true_value=true_age[i], num_fig=i+1) #true_value=true_age[i],
 
-# Plot slip throhg time and 2D plots
+# Plot slip through time and 2D plots
 if use_rpt==False and invert_slips==True:
     if true_scenario_known == False and number_of_events!=len(true_slips):
         for i in range (0, number_of_events):
