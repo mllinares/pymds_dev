@@ -69,7 +69,7 @@ if invert_slips == False and use_rpt == True:
     slips_r = torch.tensor(slips[::-1].copy()) # reverse slip array, copy.() used to construct torch tensor
     seismic_scenario['slips'] = slips_r
     fig.plot_rpt(height, Data, my_bkps) # plot the results of ruptures
-    
+    np.savetxt('slip_rpt.txt', slips_r) # save slips infered by ruptures
     
 
 #%%Compute geometric scaling factors 
