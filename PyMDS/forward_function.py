@@ -34,7 +34,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     """ VARIABLES INITIALIZATION """
     # Site parameters
     param = parameters.param()
-    time_interval=long_int
+    time_interval = long_int
     Hfinal = param.Hfinal
     alpha = param.alpha
     beta = param.beta
@@ -160,7 +160,6 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
         xa[j, 1]=dpj[62].copy()
         
     """ VARIABLE INITIALIZATION """
-     
     time_interval=seis_int
     # site parameters (see site_parameters.py)
     param = parameters.param()
@@ -176,10 +175,6 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     data = param.data
     coll = param.coll
     EL = param.sf
-    
-    # seismic scenario
-    age_base = seismic_scenario['ages']
-    age=age_base.clone().detach().numpy() 
     
     # Scaling factors
     S_S = scaling_factors['S_S']
