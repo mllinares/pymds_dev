@@ -47,13 +47,13 @@ def aicc(measurements, calculations, nb_param):
 def precompute_slips(cl_36, h_samples, nb_bkps, model_name='rank', double_check=False, max_bkps=5, plot=False):
     """ This function pre-computes the slip array for the inversion (see Truong at al. 2020, rupture package for more info)
     
-        INPUTS : cl_36, cl36 concentration data, array or tensor, shape : (1, nb_samples)
-                 h_samples, height of samples, array or tensor, shape : (1, nb_samples)
-                 nb_bkps, number of earthquakes, integer
-                 model_name, name of the model you bwant to use, string (l1, l2, normal, rank, rbf, ar), default ='rank'
-                 double_check, use the penalty algorithm to infer minimum ruptures (experimental), boolean, default=False
-                 max_bkps, maximum expected number of earthquakes, interger, default=5
-                 plot, make plots of infered ruptures, boolean, default=False
+        INPUTS : cl_36, cl36 concentration data, type : array or tensor, shape : (1, nb_samples)
+                 h_samples, height of samples, type :array or tensor, shape : (1, nb_samples)
+                 nb_bkps, number of earthquakes, type :integer
+                 model_name, name of the model you bwant to use, type : string (l1, l2, normal, rank, rbf, ar), default ='rank'
+                 double_check, use the penalty algorithm to infer minimum ruptures (experimental), type : boolean, default=False
+                 max_bkps, maximum expected number of earthquakes, type : interger, default=5
+                 plot, make plots of infered ruptures, type : boolean, default=False
                  
         OUTPUT : slips, slip tensor, torch tensor
                  """
