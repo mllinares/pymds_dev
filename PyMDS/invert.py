@@ -36,6 +36,7 @@ param=parameters.param()
 cl36AMS = param.cl36AMS
 height = param.h
 Hfinal = param.Hfinal
+trench_depth = param.trench_depth
 sigAMS = np.zeros(len(cl36AMS))+(np.min(cl36AMS)*0.1)
 Data = torch.tensor(cl36AMS)
 var_cl36=np.var(cl36AMS)
@@ -58,6 +59,7 @@ target_prob = 0.7 # target acceptancy probability (<1)
 
 if invert_slips == False and use_rpt == True:
     import ruptures as rpt
+    # indexes = np.where(height>trench_depth)[0] !!! TO BE CHECKED
     algo = rpt.Dynp(model='l2', min_size=10, jump=10).fit(cl36AMS) # available (l1, normal, rbf, rank), min_size : min len segment, jump : min len between two points
     my_bkps = np.array(algo.predict(n_bkps=number_of_events-1)) # Number of break-ups = nb_ev-1 
     my_bkps[-1]=my_bkps[-1]-1 # Last breakup-1 (solve index problems)
@@ -122,7 +124,7 @@ all_sigma, median_sigma, mean_sigma = fig.variable_results(nb_sample,'sigma', po
 
 if invert_slips==True:
     all_slip, median_slip, mean_slip = fig.array_results(nb_sample, number_of_events, 'slip', posterior_samples)
-    all_slip_corrected, mean_slip_corrected, median_slip_corrected = fig.correct_slip_amout(all_slip, mean_slip, median_slip, Hfinal) # slip amount correction
+    all_slip_corrected, mean_slip_corrected, median_slip_corrected = fig.correct_slip_amout(all_slip, mean_slip, median_slip, Hfinal-trench_depth) # slip amount correction
 
 if invert_sr==True:
     all_sr, mean_sr, median_sr=fig.variable_results(nb_sample,'SR', posterior_samples)
@@ -131,7 +133,6 @@ if invert_sr==True:
 inferred_scenario={}
 inferred_scenario['ages'] = torch.tensor(median_age) 
 inferred_scenario['preexp'] = true_scenario['preexp']
-
 
 if invert_slips == True:
     inferred_scenario['slips'] = torch.tensor(median_slip_corrected)
