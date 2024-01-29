@@ -48,6 +48,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     rho_rock = param.rho_rock
     rho_coll = param.rho_coll
     epsilon = param.erosion_rate
+    Hscarp = Hfinal-param.trench_depth
     
     # Seismic scenario
     age_base = seismic_scenario['ages']
@@ -56,8 +57,8 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     slip = slip_base.clone().detach().numpy() 
     
     # cumsum(slip) must be equal to Hfinal to avoid estimation of slip in non sampled part
-    if (find_slip == True and np.sum(slip)<Hfinal) or (find_slip == True and np.sum(slip))>Hfinal:
-        slip=slip+((Hfinal-np.sum(slip))/len(slip))+1 # +1 because int(slips) is used below and sometimes the last sample is not included
+    if (find_slip == True and np.sum(slip)<Hscarp) or (find_slip == True and np.sum(slip))>Hscarp:
+        slip = slip+((Hscarp-np.sum(slip))/len(slip))+1 # +1 because int(slips) is used below and sometimes the last sample is not included
     
     # Handling of quiescence period
     if seismic_scenario['quiescence'] !=0 :
