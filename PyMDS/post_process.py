@@ -159,6 +159,7 @@ def correct_slip_amout(all_slip, mean_slip, median_slip, Hfinal):
         
     if np.sum(median_slip)>Hfinal or np.sum(median_slip)<Hfinal:
         median_slip = median_slip + ((Hfinal-np.sum(median_slip))/len(median_slip))
+    np.savetxt('all_slip_corrected.txt', all_slip)
     return all_slip, mean_slip, median_slip
 
 def get_rhat(variable, diagnostics):
