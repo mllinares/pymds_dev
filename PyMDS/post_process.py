@@ -10,6 +10,7 @@ import matplotlib.ticker as mtick
 import numpy as np
 import torch
 import ruptures as rpt
+import os
 
 
 # %% computational functions
@@ -140,13 +141,12 @@ def array_results(number_of_models, number_of_events, variable, posterior_sample
     return save_all, median, mean
 
 def correct_slip_amout(all_slip, mean_slip, median_slip, Hfinal):
-    """ Correct the slip amount if necessary (when inversing slip amout per event)
-    
-    INPUT : all_slip, all tested value, 2D array (numpy) shape ((number_of_models, number_of_events))
+    """ Correct the slip amount if necessary (when inversing slip amout per event) to avoid ruptures above the sampled portion.
+    INPUTS : all_slip, all tested value, 2D array (numpy) shape ((number_of_models, number_of_events))
             mean_slip, mean value, 1D array (numpy)
             median, median value, 1D array (numpy)
             
-   OUTPUT : all_slip, corrected slips, 2D array (numpy) shape ((number_of_models, number_of_events))
+   OUTPUTS : all_slip, corrected slips, 2D array (numpy) shape ((number_of_models, number_of_events))
             mean_slip, corrected mean value per event, 1D array (numpy)
             median_slip, corrected median value per event, 1D array (numpy) """
             
@@ -162,9 +162,10 @@ def correct_slip_amout(all_slip, mean_slip, median_slip, Hfinal):
     np.savetxt('all_slip_corrected.txt', all_slip)
     return all_slip, mean_slip, median_slip
 
+
 def get_rhat(variable, diagnostics):
     """ Get the result of the Gilman Rubin filter of a variable (used for display in the nohup.out file)
-    INPUT : variable, variable name used for the MCMC, str
+    INPUTS : variable, variable name used for the MCMC, str
             diagnostics, the diagnostics dictionnary (mcmc.diagnostics), dictionnary
     OUTPUT : rhat, Gilman Rubin filter result (should be close to 1), float"""
     
@@ -172,8 +173,8 @@ def get_rhat(variable, diagnostics):
     return rhat
 
 def get_rhat_array(variable, diagnostics, nb_event):
-    """ Get an array of rhat, useful for ages and slip array (used for display in the nohup.out file)
-    INPUT : variable, variable name used for the MCMC, str
+    """ Get an array of rhat, useful for ages and slip array (used for display in the summary.txt file)
+    INPUTS : variable, variable name used for the MCMC, str
             diagnostics, the diagnostics dictionnary (mcmc.diagnostics), dictionnary
             nb_event, number of events, int
     OUTPUT : array_rhat, array of corresponding rhat values for the infered values, 1D array (numpy)"""
@@ -184,6 +185,40 @@ def get_rhat_array(variable, diagnostics, nb_event):
         array_rhat[i]=r_hat  
         
     return array_rhat
+
+def get_70_percent_range(nb_sample, values, save=True, name='no_name'):
+    """ Get the last 70% of values (where stability is usually reached)
+    INPUTS : nb_sample, the number of samples set for the inversion, type : integer
+             values, all of the values, type : numpy 1D array
+             save, save the 70 % values or not (a folder is created), default = True, type : bool
+             name, name of the saved file, default ='no_name', type : string
+    OUTPUTS : the last 70% values, numpy 1D array
+              folder named '70_per_cent' and .txt file of values """
+        
+    values_70 = values[0.3*nb_sample::]
+    if save==True:
+        if os.path.isdir('70_per_cent')==False:
+            os.mkdir('70_per_cent') 
+            np.savetxt('70_per_cent/'+name+'.txt', values_70)
+        else:
+            np.savetxt('70_per_cent/'+name+'.txt', values_70)
+    return values_70
+
+def get_statistics(values, plot=False):
+    """ Get statistics on values 
+    INPUTS : values, all of the values, type : numpy 1D array
+    OUTPUTS : median, mean, standard deviation and variancy of the dataset, type : float
+              histogram and normal curve of the dataset"""
+        
+    median=np.median(values)
+    mean=np.mean(values)
+    std=np.std(values)
+    var=np.var(values)
+    if plot==True:
+        from scipy.stats import norm 
+        plt.hist(values, bins=50, color='black')
+        plt.plot(values, norm.pdf(values, mean, std)) 
+    return median, mean, std, var
 
 # %% plot functions
 def plot_profile(clAMS, sigAMS, height, inferred_cl36, plot_name):
@@ -196,7 +231,7 @@ def plot_profile(clAMS, sigAMS, height, inferred_cl36, plot_name):
              inferred_cl36, inferred 36cl, type : array
              plot_name : name of the plot, type : str
              
-    OUTPUTS : PNG plot """
+    OUTPUT : PNG plot """
     
     plt.clf()
     if type(sigAMS)!=str:

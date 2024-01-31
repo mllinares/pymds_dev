@@ -28,8 +28,8 @@ today = datetime.now().strftime("%d/%m/%Y %H:%M:%S") # get today's date day/mont
 
 """ Input seismic scenario """
 seismic_scenario={} # open new dict to create seismic scenario
-number_of_events = 6 # enter the number of event
-true_scenario_known = True # true scenario known? (for plotting purpose)
+number_of_events = 4 # enter the number of event
+true_scenario_known = False # true scenario known? (for plotting purpose)
 
 """ Input parameters"""
 param=parameters.param()
@@ -42,16 +42,16 @@ Data = torch.tensor(cl36AMS)
 var_cl36=np.var(cl36AMS)
 
 """ Chose parameters to invert """
-invert_slips = False # invert slip array ?
-use_rpt = True # use rupture package to find slips
+invert_slips = True # invert slip array ?
+use_rpt = False # use rupture package to find slips
 invert_sr = True # invert slip rate ?
 invert_quies = False # invert quiescence
 
 """ MCMC parameters, to be set with CAUTION """
 tic=time.time()
 pyro.set_rng_seed(20)
-w_step = 10  # number of warmup (~30% of total models)
-nb_sample = 4000 # number of samples
+w_step = 1  # number of warmup (~30% of total models)
+nb_sample = 10 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
 target_prob = 0.7 # target acceptancy probability (<1)
 
@@ -225,7 +225,7 @@ else:
 
 # Plot slip through time and 2D plots
 if use_rpt==False and invert_slips==True:
-    if true_scenario_known == False and number_of_events!=len(true_slips):
+    if true_scenario_known == False or number_of_events!=len(true_slips):
         for i in range (0, number_of_events):
             fig.plot_variable_np(all_slip_corrected[:, i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1) 
             fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age[i], median_slip_corrected[i]]))
