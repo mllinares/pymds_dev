@@ -58,7 +58,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     
     # cumsum(slip) must be equal to Hfinal to avoid estimation of slip in non sampled part
     if (find_slip == True and np.sum(slip)<Hscarp) or (find_slip == True and np.sum(slip))>Hscarp:
-        slip = ((slip/np.sum(slip))*Hscarp) +1 # +1 because int(slips) is used below and sometimes the last sample is not included
+        slip = ((slip/np.sum(slip))*Hscarp) 
     
     # Handling of quiescence period
     if seismic_scenario['quiescence'] !=0 :
