@@ -45,7 +45,7 @@ def aicc(measurements, calculations, nb_param):
     aicc = n*np.log(aicc/n) + (2*n*nb_param)/(n - nb_param - 1)
     return aicc
 
-def precompute_slips(cl_36, h_samples, nb_bkps, model_name='rank', double_check=False, max_bkps=5, plot=False):
+def precompute_slips(cl_36, h_samples, nb_bkps, model_name='normal', pen_algo=False, max_bkps=15, plot=False, trench_depth=0):
     """ This function pre-computes the slip array for the inversion (see Truong at al. 2020, rupture package for more info)
     
         INPUTS : cl_36, cl36 concentration data, type : array or tensor, shape : (1, nb_samples)
@@ -59,22 +59,32 @@ def precompute_slips(cl_36, h_samples, nb_bkps, model_name='rank', double_check=
         OUTPUT : slips, slip tensor, torch tensor
                  """
                  
-    slips = torch.zeros((nb_bkps))
-    algo = rpt.Dynp(model=model_name, min_size=1, jump=10).fit(cl_36) # l1, l2, normal, rbf, rank
-    result = np.array(algo.predict(n_bkps=nb_bkps))
     
-    for i in range (0, len(result)-1):
-        slips[i]=h_samples[result[i+1]]-h_samples[result[i]]
+    indexes = np.where(h_samples>trench_depth)[0]
+    
+    
+    if pen_algo==False:
+        slips = np.zeros((nb_bkps))
+        algo = rpt.Dynp(model=model_name, min_size=1, jump=10).fit(cl_36[indexes]) # l1, l2, normal, rbf, rank
+        result = np.array(algo.predict(n_bkps=nb_bkps))
+        result[-1]=result[-1]-1
+        result = np.hstack((0, result))
+        for i in range (0, len(slips)-1):
+            slips[i]=h_samples[result[i+1]]-h_samples[result[i]]
         
-    if double_check == True:
-        my_bkps = algo.predict(pen=np.log(len(cl_36)) * max_bkps * 0.7**2)
-        
+    if pen_algo == True:
+        algo = rpt.Pelt(model=model_name, min_size=10, jump=2).fit(cl_36[indexes])
+        result = algo.predict(pen=0.001) #np.log(len(cl_36[indexes])) * max_bkps * 0.7**2
+        slips = np.zeros((len(result)))
+        result[-1]=result[-1]-1
+        result = np.hstack((0, result))
+        for i in range (0, len(slips)-1):
+            slips[i]=h_samples[result[i+1]]-h_samples[result[i]]
+            
     if plot == True:
-        plt.xlabel('[$^{36}$Cl] (at/g)')
-        plt.ylabel('Height(m)')
-        plt.legend(loc='lower right')
-        plt.tight_layout()
+        plot_rpt(h_samples, cl_36, result, trench_depth=trench_depth)
 
+    slips=torch.tensor(slips[::-1].copy()) # reverse slip array, copy.() used to construct torch tensor
     return slips
 
 # %% data management functions
@@ -140,25 +150,26 @@ def array_results(number_of_models, number_of_events, variable, posterior_sample
     np.savetxt(variable+'.txt', save_all)
     return save_all, median, mean
 
-def correct_slip_amout(all_slip, mean_slip, median_slip, Hfinal):
+def correct_slip_amout(all_slip, mean_slip, median_slip, Hmax):
     """ Correct the slip amount if necessary (when inversing slip amout per event) to avoid ruptures above the sampled portion.
     INPUTS : all_slip, all tested value, 2D array (numpy) shape ((number_of_models, number_of_events))
             mean_slip, mean value, 1D array (numpy)
             median, median value, 1D array (numpy)
+            Hmax, maximum height, float
             
    OUTPUTS : all_slip, corrected slips, 2D array (numpy) shape ((number_of_models, number_of_events))
             mean_slip, corrected mean value per event, 1D array (numpy)
             median_slip, corrected median value per event, 1D array (numpy) """
             
     for i in range (0, len(all_slip)):
-        if np.sum(all_slip[i])>Hfinal or np.sum(all_slip[i])<Hfinal:
-            all_slip [i] = all_slip[i] + ((Hfinal-np.sum(all_slip[i]))/len(all_slip[i]))
+        if np.sum(all_slip[i])!=Hmax:
+            all_slip [i] =(all_slip [i]/np.sum(all_slip [i]))*Hmax
             
-    if np.sum(mean_slip)>Hfinal or np.sum(mean_slip)<Hfinal:
-        mean_slip = mean_slip + ((Hfinal-np.sum(mean_slip))/len(mean_slip))
+    if np.sum(mean_slip)!=Hmax:
+        mean_slip = (mean_slip/np.sum(mean_slip))*Hmax
         
-    if np.sum(median_slip)>Hfinal or np.sum(median_slip)<Hfinal:
-        median_slip = median_slip + ((Hfinal-np.sum(median_slip))/len(median_slip))
+    if np.sum(median_slip)!=Hmax:
+        median_slip = (median_slip/np.sum(median_slip))*Hmax
     np.savetxt('all_slip_corrected.txt', all_slip)
     return all_slip, mean_slip, median_slip
 
@@ -245,14 +256,14 @@ def plot_profile(clAMS, sigAMS, height, inferred_cl36, plot_name):
     plt.legend()
     plt.savefig(plot_name+'.png', dpi = 1200)
     
-def plot_rpt(sample_height, cl36_profile, ruptures):
+def plot_rpt(sample_height, cl36_profile, ruptures, trench_depth=0):
     """ Plot the ruptures found by the rupture package
     INPUTS : sample_height, height of the samples, type : 1D array (torch or numpy)
              cl36_profile, cl36 profile, type : 1D array (torch or numpy)
              ruptures; ruptures found by the ruptures package, float or 1D array """
     plt.clf()
     plt.figure(num=1, figsize=(8.5, 5.3), dpi=1200)
-    plt.plot(cl36_profile, sample_height, marker='.', linestyle='', color='black')
+    plt.plot(cl36_profile, sample_height-trench_depth, marker='.', linestyle='', color='black')
     plt.hlines(sample_height[ruptures], min(cl36_profile), max(cl36_profile), linestyle = '--', color='lightsteelblue')
     plt.xlabel('[$^{36}$Cl] (at/g)')
     plt.ylabel('Height (cm)')
