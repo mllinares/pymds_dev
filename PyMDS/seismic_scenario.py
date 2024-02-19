@@ -13,11 +13,9 @@ import parameters
 import sys
 from colorama import Fore, Back, Style # allows to color text for errors
 
-
 # import the cumulative height to calculate the preexp or SR
 param=parameters.param()
 cumulative_height = param.long_term_relief
-
 # Seismic scenario stored in a dict
 seismic_scenario={}
 seismic_scenario['ages'] = torch.tensor([]) # exhumation ages, older to younger (yr)
