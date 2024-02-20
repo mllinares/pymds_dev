@@ -23,7 +23,7 @@ from pyro.infer import MCMC, NUTS
 import parameters
 
 #%% Initialization
-# sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
+sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
 today = datetime.now().strftime("%d/%m/%Y %H:%M:%S") # get today's date day/month/year hour:min:sec
 
 """ Input seismic scenario """
@@ -127,7 +127,7 @@ if invert_slips == True:
     slip_hlines=np.zeros((number_of_events))
     for i in range (0, len(slip_hlines)):
         slip_hlines[i]=np.sqrt((median_slip_corrected[i]-(Hscarp-np.sum(median_slip_corrected[0:i])))**2)
-        # slip_hlines[i]=(Hfinal-trench_depth)-np.sum(inferred_scenario['slips'].detach().numpy()[0:i])
+       
         
 elif invert_slips == False and use_rpt == False:
     inferred_scenario['slips'] = true_scenario['slips']
