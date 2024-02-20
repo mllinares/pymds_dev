@@ -23,7 +23,7 @@ from pyro.infer import MCMC, NUTS
 import parameters
 
 #%% Initialization
-sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
+# sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
 today = datetime.now().strftime("%d/%m/%Y %H:%M:%S") # get today's date day/month/year hour:min:sec
 
 """ Input seismic scenario """
@@ -52,13 +52,13 @@ invert_quies = False # invert quiescence
 tic=time.time()
 pyro.set_rng_seed(20)
 w_step = 1  # number of warmup (~30% of total models)
-nb_sample = 1000 # number of samples
+nb_sample = 10 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
 target_prob = 0.7 # target acceptancy probability (<1)
 
 #%% Find slip with rupture package if use_rpt = True
 if invert_slips == False and use_rpt == True:
-    slips_rpt=fig.precompute_slips(cl36AMS, height, number_of_events, plot=True,pen_algo=True, trench_depth=trench_depth)
+    slips_rpt = fig.precompute_slips(cl36AMS, height, number_of_events, plot=True, pen_algo=False, trench_depth=trench_depth)
     seismic_scenario['slips'] = slips_rpt
     number_of_events = len(slips_rpt) # If Pelt algo is used, the number of events can vary
 
@@ -198,40 +198,40 @@ true_slips=true_scenario['slips']
     2) median model and greyfill between all models
     3) median model and greyfill between the last 70% of all models (when inversion is stable)"""
 fig.plot_profile(cl36AMS, param.sig_cl36AMS, height, cl_36_inferred, 'plot_median')
-fig.plot_min_max(cl36AMS, height-trench_depth, all_36cl_models, sigAMS=np.zeros((len(cl36AMS)))+np.min(cl36AMS)*0.1, slips=np.hstack((slip_hlines*1e-2, Hscarp*1e-2)), plot_name='all_models')
-fig.plot_min_max(cl36AMS, height-trench_depth, all_36cl_models[:,int(0.3*nb_sample)::], sigAMS=np.zeros((len(cl36AMS)))+np.min(cl36AMS)*0.1, slips=np.hstack((slip_hlines*1e-2, Hscarp*1e-2)), plot_name='models_70_percent')
+fig.plot_min_max(cl36AMS, height-trench_depth, all_36cl_models, sigAMS=np.zeros((len(cl36AMS)))+np.min(cl36AMS)*0.1, slips=np.hstack(((slip_hlines-trench_depth)*1e-2, Hscarp*1e-2)), plot_name='all_models')
+fig.plot_min_max(cl36AMS, height-trench_depth, all_36cl_models[:,int(0.3*nb_sample)::], sigAMS=np.zeros((len(cl36AMS)))+np.min(cl36AMS)*0.1, slips=np.hstack(((slip_hlines-trench_depth)*1e-2, Hscarp*1e-2)), plot_name='models_70_percent')
 
 # plot sigma 
-# fig.plot_variable_np(all_sigma, 'Sigma', 'Sigma')
+fig.plot_variable_np(all_sigma, 'Sigma', 'Sigma')
 
-# # Plot ages infered through time
-# if true_scenario_known == False or number_of_events!=len(true_age):
-#     for i in range (0, number_of_events):
-#         fig.plot_variable_np(all_age[:, i], 'Event '+str(i+1), 'Age', num_fig=i+1) 
-# else:
-#     for i in range (0, number_of_events):
-#         fig.plot_variable_np(all_age[:, i], 'Event '+str(i+1), 'Age', true_value=true_age[i], num_fig=i+1) #true_value=true_age[i],
+# Plot ages infered through time
+if true_scenario_known == False or number_of_events!=len(true_age):
+    for i in range (0, number_of_events):
+        fig.plot_variable_np(all_age[:, i], 'Event '+str(i+1), 'Age', num_fig=i+1) 
+else:
+    for i in range (0, number_of_events):
+        fig.plot_variable_np(all_age[:, i], 'Event '+str(i+1), 'Age', true_value=true_age[i], num_fig=i+1) #true_value=true_age[i],
 
-# # Plot slip through time and 2D plots
-# if use_rpt==False and invert_slips==True:
-#     if true_scenario_known == False or number_of_events!=len(true_slips):
-#         for i in range (0, number_of_events):
-#             fig.plot_variable_np(all_slip_corrected[:, i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1) 
-#             fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age[i], median_slip_corrected[i]]))
-#     elif true_scenario_known == True and number_of_events==len(true_slips):
-#         for i in range (0, number_of_events):
-#             fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), true_values=np.array([true_scenario['ages'][i], true_scenario['slips'][i]]), median_values=np.array([median_age[i], median_slip_corrected[i]]))
-#             fig.plot_variable_np(all_slip_corrected[:, i],true_value=true_slips[i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1)
-#     elif true_scenario_known==True and number_of_events!=len(true_age):
-#         for i in range (0, number_of_events):
-#             fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age[i], median_slip_corrected[i]]))
-#             fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1)+'_with_true_values', true_values=np.array([true_scenario['ages'].numpy(), true_scenario['slips'].numpy()]), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+# Plot slip through time and 2D plots
+if use_rpt==False and invert_slips==True:
+    if true_scenario_known == False or number_of_events!=len(true_slips):
+        for i in range (0, number_of_events):
+            fig.plot_variable_np(all_slip_corrected[:, i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1) 
+            fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+    elif true_scenario_known == True and number_of_events==len(true_slips):
+        for i in range (0, number_of_events):
+            fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), true_values=np.array([true_scenario['ages'][i], true_scenario['slips'][i]]), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+            fig.plot_variable_np(all_slip_corrected[:, i],true_value=true_slips[i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1)
+    elif true_scenario_known==True and number_of_events!=len(true_age):
+        for i in range (0, number_of_events):
+            fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age[i], median_slip_corrected[i]]))
+            fig.plot_2D(all_age[:,i], all_slip[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1)+'_with_true_values', true_values=np.array([true_scenario['ages'].numpy(), true_scenario['slips'].numpy()]), median_values=np.array([median_age[i], median_slip_corrected[i]]))
 
-# if invert_sr == True and true_scenario_known==True:
-#     fig.plot_variable_np(all_sr, 'SR', 'SR (mm/yr)', true_value = true_scenario['SR'])
-# elif invert_sr == True and true_scenario_known==False:
-#     fig.plot_variable_np(all_sr, 'SR', 'SR (mm/yr)')
+if invert_sr == True and true_scenario_known==True:
+    fig.plot_variable_np(all_sr, 'SR', 'SR (mm/yr)', true_value = true_scenario['SR'])
+elif invert_sr == True and true_scenario_known==False:
+    fig.plot_variable_np(all_sr, 'SR', 'SR (mm/yr)')
 
-# toc_pp=time.time()
+toc_pp=time.time()
 
-# print('\nTime for plotting : ', '{0:.2f}'.format((toc_pp-tic_pp)/60), 'min')
+print('\nTime for plotting : ', '{0:.2f}'.format((toc_pp-tic_pp)/60), 'min')

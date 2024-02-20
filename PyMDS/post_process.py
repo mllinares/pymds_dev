@@ -52,39 +52,53 @@ def precompute_slips(cl_36, h_samples, nb_bkps, model_name='normal', pen_algo=Fa
                  h_samples, height of samples, type :array or tensor, shape : (1, nb_samples)
                  nb_bkps, number of earthquakes, type :integer
                  model_name, name of the model you bwant to use, type : string (l1, l2, normal, rank, rbf, ar), default ='rank'
-                 double_check, use the penalty algorithm to infer minimum ruptures (experimental), type : boolean, default=False
+                 pen_algo, use the penalty algorithm to infer minimum ruptures (experimental), type : boolean, default=False
                  max_bkps, maximum expected number of earthquakes, type : interger, default=5
                  plot, make plots of infered ruptures, type : boolean, default=False
                  
         OUTPUT : slips, slip tensor, torch tensor
                  """
-                 
     
-    indexes = np.where(h_samples>trench_depth)[0]
-    
-    
+    # First we extract the exhumated portion of the scarp
+    if trench_depth!=0:
+        indexes = np.where(h_samples>trench_depth)[0]
+        cl_36_for_rpt = cl_36[indexes]
+        h_samples_for_rpt = h_samples[indexes]
+        min_height = h_samples[np.min(indexes)-1]
+    else:
+        cl_36_for_rpt = cl_36
+        h_samples_for_rpt = h_samples
+        min_height = 0
+        
+    # Use of dynamic algorithm (no evaluation of minimum number of event)
     if pen_algo==False:
         slips = np.zeros((nb_bkps))
-        algo = rpt.Dynp(model=model_name, min_size=1, jump=10).fit(cl_36[indexes]) # l1, l2, normal, rbf, rank
-        result = np.array(algo.predict(n_bkps=nb_bkps))
-        result[-1]=result[-1]-1
-        result = np.hstack((0, result))
-        for i in range (0, len(slips)-1):
-            slips[i]=h_samples[result[i+1]]-h_samples[result[i]]
+        algo = rpt.Dynp(model=model_name, min_size=1, jump=10).fit(cl_36_for_rpt) # l1, l2, normal, rbf, rank
+        result = np.array(algo.predict(n_bkps=nb_bkps))-1
+        print(result, len(h_samples))
+        h_bkps = np.hstack((h_samples_for_rpt[result][::-1], min_height)) # Get height of break-ups
+        print(h_bkps)
+        slips = np.zeros((len(result)))  # Define ouput array containing slips
+
+        for i in range (0, len(slips)):
+            slips[i]=h_bkps[i]-h_bkps[i+1] # Get slip amount btwn break-ups
+        print('slips:', slips, 'sum:', np.sum(slips)) 
         
     if pen_algo == True:
-        algo = rpt.Pelt(model=model_name, min_size=10, jump=2).fit(cl_36[indexes])
-        result = algo.predict(pen=0.001) #np.log(len(cl_36[indexes])) * max_bkps * 0.7**2
-        slips = np.zeros((len(result)))
-        result[-1]=result[-1]-1
-        result = np.hstack((0, result))
-        for i in range (0, len(slips)-1):
-            slips[i]=h_samples[result[i+1]]-h_samples[result[i]]
-            
+        algo = rpt.Pelt(model=model_name, min_size=10, jump=2).fit(cl_36_for_rpt) # define algo, min_size: min distance btwn change pts, jump : grid of possible change pts
+        result = np.array(algo.predict(pen=0.001))-1 # Fit the 36cl signal, pen: penalty value, -1 to get the correct indexes (rpt uses len instead of indexes)
+        print(result, len(h_samples))
+        h_bkps = np.hstack((h_samples_for_rpt[result][::-1], min_height)) # Get height of break-ups
+        print(h_bkps)
+        slips = np.zeros((len(result)))  # Define ouput array containing slips
+
+        for i in range (0, len(slips)):
+            slips[i]=h_bkps[i]-h_bkps[i+1] # Get slip amount btwn break-ups
+        print('slips:', slips, 'sum:', np.sum(slips)) 
     if plot == True:
         plot_rpt(h_samples, cl_36, result, trench_depth=trench_depth)
 
-    slips=torch.tensor(slips[::-1].copy()) # reverse slip array, copy.() used to construct torch tensor
+    slips=torch.tensor(slips.copy()) # reverse slip array, copy.() used to construct torch tensor
     return slips
 
 # %% data management functions
