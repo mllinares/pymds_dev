@@ -58,7 +58,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     
     # cumsum(slip) must be equal to Hfinal to avoid estimation of slip in non sampled part
     if (find_slip == True and np.sum(slip)<Hscarp) or (find_slip == True and np.sum(slip))>Hscarp:
-        slip = ((slip/np.sum(slip))*Hscarp) 
+        slip = ((slip/np.sum(slip))*Hscarp) +1 # +1 because int(slips) is used below and sometimes the last sample is not included
     
     # Handling of quiescence period
     if seismic_scenario['quiescence'] !=0 :
@@ -217,7 +217,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
 
     for iseg in range (0, N_eq):
        eo[np.where((Z > sc0[iseg]) & (Z <= sc0[iseg + 1]))] = epsilon*age[iseg]*0.1*rho_rock # in g.cm-2
-    eo[0:len(Z)] = epsilon*age[0]*0.1*rho_rock
+    eo[-1] = epsilon*age[0]*0.1*rho_rock
     eo = eo + th2  # we add the 1/2 thickness : sample position along e is given at the sample center
     j1 = np.where((Z >= sc0[0]) & (Z <= sc0[1]))[0]  # Averf samples from first exhumed segment 
     N1 = np.zeros(len(Z[j1])) 
@@ -231,7 +231,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
         ejk = eo[j1[k]]   # initial position along e is eo(j1(k)) 
              
         # C2 - Loop - iteration on  time steps ii from t1 (= age eq1) to present
-        for ii in range (0, int(age[0]/time_interval)+1):
+        for ii in range (0, int(age[0]), time_interval):
             
             P_cosmo, P_rad = clrock(djk, ejk, Lambda_f_e, so_f_e, EL_f[1], EL_mu[1]) 
             scorr = S_S[int(hjk)]/S_S[0]     
@@ -274,7 +274,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
                 #------------------------------            
                 # C6 - DEPTH LOOP - iteration during BURIED PERIOD (T1 -> T(iseg-1))
                 #------------------------------ 
-                for iii in range (0, int((age[l]-age[l+1])/time_interval)):
+                for iii in range (0, int(age[l]-age[l+1]),time_interval):
                     P_cosmo,P_rad = clrock(djk, ejk, Lambda_f_e, so_f_e, EL_f[1], EL_mu[1]) 
                     # scaling at depth due to the presence of the colluvium: scoll=Pcoll(j)/Pcoll(z=0)
                     P_coll = clcoll(coll, djk, Lambda_f_diseg[l+1], so_f_diseg[l+1], EL_f[1], EL_mu[1]) 
@@ -291,7 +291,7 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
             #------------------------------         
             # C7 - SURFACE LOOP - iteration during EXHUMED PERIOD 
             
-            for ii in range (0, int(age[iseg]/time_interval)+1):
+            for ii in range (0, int(age[iseg]), time_interval):
                 P_cosmo,P_rad = clrock(djk,ejk,Lambda_f_e,so_f_e,EL_f[1],EL_mu[1]) 
                 scorr = S_S[1+int(hjk)]/S_S[0]  # surface scaling factor (scorr)
                 P_tot = P_rad + P_cosmo*scorr  # only Pcosmogenic is scaled with scorr
