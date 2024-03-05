@@ -10,6 +10,7 @@ import matplotlib.ticker as mtick
 import numpy as np
 import torch
 import ruptures as rpt
+import os
 
 
 # %% computational functions
@@ -44,36 +45,60 @@ def aicc(measurements, calculations, nb_param):
     aicc = n*np.log(aicc/n) + (2*n*nb_param)/(n - nb_param - 1)
     return aicc
 
-def precompute_slips(cl_36, h_samples, nb_bkps, model_name='rank', double_check=False, max_bkps=5, plot=False):
+def precompute_slips(cl_36, h_samples, nb_bkps, model_name='normal', pen_algo=False, max_bkps=15, plot=False, trench_depth=0):
     """ This function pre-computes the slip array for the inversion (see Truong at al. 2020, rupture package for more info)
     
-        INPUTS : cl_36, cl36 concentration data, array or tensor, shape : (1, nb_samples)
-                 h_samples, height of samples, array or tensor, shape : (1, nb_samples)
-                 nb_bkps, number of earthquakes, integer
-                 model_name, name of the model you bwant to use, string (l1, l2, normal, rank, rbf, ar), default ='rank'
-                 double_check, use the penalty algorithm to infer minimum ruptures (experimental), boolean, default=False
-                 max_bkps, maximum expected number of earthquakes, interger, default=5
-                 plot, make plots of infered ruptures, boolean, default=False
+        INPUTS : cl_36, cl36 concentration data, type : array or tensor, shape : (1, nb_samples)
+                 h_samples, height of samples, type :array or tensor, shape : (1, nb_samples)
+                 nb_bkps, number of earthquakes, type :integer
+                 model_name, name of the model you bwant to use, type : string (l1, l2, normal, rank, rbf, ar), default ='rank'
+                 pen_algo, use the penalty algorithm to infer minimum ruptures (experimental), type : boolean, default=False
+                 max_bkps, maximum expected number of earthquakes, type : interger, default=5
+                 plot, make plots of infered ruptures, type : boolean, default=False
                  
         OUTPUT : slips, slip tensor, torch tensor
                  """
-                 
-    slips = torch.zeros((nb_bkps))
-    algo = rpt.Dynp(model=model_name, min_size=1, jump=10).fit(cl_36) # l1, l2, normal, rbf, rank
-    result = np.array(algo.predict(n_bkps=nb_bkps))
     
-    for i in range (0, len(result)-1):
-        slips[i]=h_samples[result[i+1]]-h_samples[result[i]]
+    # First we extract the exhumated portion of the scarp
+    if trench_depth!=0:
+        indexes = np.where(h_samples>trench_depth)[0]
+        cl_36_for_rpt = cl_36[indexes]
+        h_samples_for_rpt = h_samples[indexes]
+        min_height = h_samples[np.min(indexes)-1]
+    else:
+        cl_36_for_rpt = cl_36
+        h_samples_for_rpt = h_samples
+        min_height = 0
         
-    if double_check == True:
-        my_bkps = algo.predict(pen=np.log(len(cl_36)) * max_bkps * 0.7**2)
-        
-    if plot == True:
-        plt.xlabel('[$^{36}$Cl] (at/g)')
-        plt.ylabel('Height(m)')
-        plt.legend(loc='lower right')
-        plt.tight_layout()
+    # Use of dynamic algorithm (no evaluation of minimum number of event)
+    if pen_algo==False:
+        slips = np.zeros((nb_bkps))
+        algo = rpt.Dynp(model=model_name, min_size=10, jump=1).fit(cl_36_for_rpt) # l1, l2, normal, rbf, rank
+        result = np.array(algo.predict(n_bkps=nb_bkps))-1
+        print(result, len(h_samples))
+        h_bkps = np.hstack((h_samples_for_rpt[result][::-1], min_height)) # Get height of break-ups
+        print(h_bkps)
+        slips = np.zeros((len(result)))  # Define ouput array containing slips
 
+        for i in range (0, len(slips)):
+            slips[i]=h_bkps[i]-h_bkps[i+1] # Get slip amount btwn break-ups
+        print('slips:', slips, 'sum:', np.sum(slips)) 
+        
+    if pen_algo == True:
+        algo = rpt.Pelt(model=model_name, min_size=10, jump=30).fit(cl_36_for_rpt) # define algo, min_size: min distance btwn change pts, jump : grid of possible change pts
+        result = np.array(algo.predict(pen=0.001))-1 # Fit the 36cl signal, pen: penalty value, -1 to get the correct indexes (rpt uses len instead of indexes)
+        print(result, len(h_samples))
+        h_bkps = np.hstack((h_samples_for_rpt[result][::-1], min_height)) # Get height of break-ups
+        print(h_bkps)
+        slips = np.zeros((len(result)))  # Define ouput array containing slips
+
+        for i in range (0, len(slips)):
+            slips[i]=h_bkps[i]-h_bkps[i+1] # Get slip amount btwn break-ups
+        print('slips:', slips, 'sum:', np.sum(slips)) 
+    if plot == True:
+        plot_rpt(h_samples, cl_36, result, trench_depth=trench_depth)
+
+    slips=torch.tensor(slips.copy()) # reverse slip array, copy.() used to construct torch tensor
     return slips
 
 # %% data management functions
@@ -139,31 +164,33 @@ def array_results(number_of_models, number_of_events, variable, posterior_sample
     np.savetxt(variable+'.txt', save_all)
     return save_all, median, mean
 
-def correct_slip_amout(all_slip, mean_slip, median_slip, Hfinal):
-    """ Correct the slip amount if necessary (when inversing slip amout per event)
-    
-    INPUT : all_slip, all tested value, 2D array (numpy) shape ((number_of_models, number_of_events))
+def correct_slip_amout(all_slip, mean_slip, median_slip, Hmax):
+    """ Correct the slip amount if necessary (when inversing slip amout per event) to avoid ruptures above the sampled portion.
+    INPUTS : all_slip, all tested value, 2D array (numpy) shape ((number_of_models, number_of_events))
             mean_slip, mean value, 1D array (numpy)
             median, median value, 1D array (numpy)
+            Hmax, maximum height, float
             
-   OUTPUT : all_slip, corrected slips, 2D array (numpy) shape ((number_of_models, number_of_events))
+   OUTPUTS : all_slip, corrected slips, 2D array (numpy) shape ((number_of_models, number_of_events))
             mean_slip, corrected mean value per event, 1D array (numpy)
             median_slip, corrected median value per event, 1D array (numpy) """
             
     for i in range (0, len(all_slip)):
-        if np.sum(all_slip[i])>Hfinal or np.sum(all_slip[i])<Hfinal:
-            all_slip [i] = all_slip[i] + ((Hfinal-np.sum(all_slip[i]))/len(all_slip[i]))
+        if np.sum(all_slip[i])!=Hmax:
+            all_slip [i] =(all_slip [i]/np.sum(all_slip [i]))*Hmax
             
-    if np.sum(mean_slip)>Hfinal or np.sum(mean_slip)<Hfinal:
-        mean_slip = mean_slip + ((Hfinal-np.sum(mean_slip))/len(mean_slip))
+    if np.sum(mean_slip)!=Hmax:
+        mean_slip = (mean_slip/np.sum(mean_slip))*Hmax
         
-    if np.sum(median_slip)>Hfinal or np.sum(median_slip)<Hfinal:
-        median_slip = median_slip + ((Hfinal-np.sum(median_slip))/len(median_slip))
+    if np.sum(median_slip)!=Hmax:
+        median_slip = (median_slip/np.sum(median_slip))*Hmax
+    np.savetxt('all_slip_corrected.txt', all_slip)
     return all_slip, mean_slip, median_slip
+
 
 def get_rhat(variable, diagnostics):
     """ Get the result of the Gilman Rubin filter of a variable (used for display in the nohup.out file)
-    INPUT : variable, variable name used for the MCMC, str
+    INPUTS : variable, variable name used for the MCMC, str
             diagnostics, the diagnostics dictionnary (mcmc.diagnostics), dictionnary
     OUTPUT : rhat, Gilman Rubin filter result (should be close to 1), float"""
     
@@ -171,8 +198,8 @@ def get_rhat(variable, diagnostics):
     return rhat
 
 def get_rhat_array(variable, diagnostics, nb_event):
-    """ Get an array of rhat, useful for ages and slip array (used for display in the nohup.out file)
-    INPUT : variable, variable name used for the MCMC, str
+    """ Get an array of rhat, useful for ages and slip array (used for display in the summary.txt file)
+    INPUTS : variable, variable name used for the MCMC, str
             diagnostics, the diagnostics dictionnary (mcmc.diagnostics), dictionnary
             nb_event, number of events, int
     OUTPUT : array_rhat, array of corresponding rhat values for the infered values, 1D array (numpy)"""
@@ -183,6 +210,40 @@ def get_rhat_array(variable, diagnostics, nb_event):
         array_rhat[i]=r_hat  
         
     return array_rhat
+
+def get_70_percent_range(nb_sample, values, save=True, name='no_name'):
+    """ Get the last 70% of values (where stability is usually reached)
+    INPUTS : nb_sample, the number of samples set for the inversion, type : integer
+             values, all of the values, type : numpy 1D array
+             save, save the 70 % values or not (a folder is created), default = True, type : bool
+             name, name of the saved file, default ='no_name', type : string
+    OUTPUTS : the last 70% values, numpy 1D array
+              folder named '70_per_cent' and .txt file of values """
+        
+    values_70 = values[0.3*nb_sample::]
+    if save==True:
+        if os.path.isdir('70_per_cent')==False:
+            os.mkdir('70_per_cent') 
+            np.savetxt('70_per_cent/'+name+'.txt', values_70)
+        else:
+            np.savetxt('70_per_cent/'+name+'.txt', values_70)
+    return values_70
+
+def get_statistics(values, plot=False):
+    """ Get statistics on values 
+    INPUTS : values, all of the values, type : numpy 1D array
+    OUTPUTS : median, mean, standard deviation and variancy of the dataset, type : float
+              histogram and normal curve of the dataset"""
+        
+    median=np.median(values)
+    mean=np.mean(values)
+    std=np.std(values)
+    var=np.var(values)
+    if plot==True:
+        from scipy.stats import norm 
+        plt.hist(values, bins=50, color='black')
+        plt.plot(values, norm.pdf(values, mean, std)) 
+    return median, mean, std, var
 
 # %% plot functions
 def plot_profile(clAMS, sigAMS, height, inferred_cl36, plot_name):
@@ -195,7 +256,7 @@ def plot_profile(clAMS, sigAMS, height, inferred_cl36, plot_name):
              inferred_cl36, inferred 36cl, type : array
              plot_name : name of the plot, type : str
              
-    OUTPUTS : PNG plot """
+    OUTPUT : PNG plot """
     
     plt.clf()
     if type(sigAMS)!=str:
@@ -209,14 +270,14 @@ def plot_profile(clAMS, sigAMS, height, inferred_cl36, plot_name):
     plt.legend()
     plt.savefig(plot_name+'.png', dpi = 1200)
     
-def plot_rpt(sample_height, cl36_profile, ruptures):
+def plot_rpt(sample_height, cl36_profile, ruptures, trench_depth=0):
     """ Plot the ruptures found by the rupture package
     INPUTS : sample_height, height of the samples, type : 1D array (torch or numpy)
              cl36_profile, cl36 profile, type : 1D array (torch or numpy)
              ruptures; ruptures found by the ruptures package, float or 1D array """
     plt.clf()
     plt.figure(num=1, figsize=(8.5, 5.3), dpi=1200)
-    plt.plot(cl36_profile, sample_height, marker='.', linestyle='', color='black')
+    plt.plot(cl36_profile, sample_height-trench_depth, marker='.', linestyle='', color='black')
     plt.hlines(sample_height[ruptures], min(cl36_profile), max(cl36_profile), linestyle = '--', color='lightsteelblue')
     plt.xlabel('[$^{36}$Cl] (at/g)')
     plt.ylabel('Height (cm)')

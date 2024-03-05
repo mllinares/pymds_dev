@@ -22,8 +22,7 @@ height = param.h
 sig = param.sig_cl36AMS
 
 """ First calculate scaling factors """
-scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, 3)
-
+scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, 5)
 
 synthetic=forward_function.mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=200)
 

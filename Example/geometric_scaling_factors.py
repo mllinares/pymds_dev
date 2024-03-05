@@ -18,7 +18,7 @@ from util import geometric_scaling_functions as gscale
     
 
 
-def neutron_scaling (params, constants, N_eq):
+def neutron_scaling (params, constants, N_eq, Hfinal=0):
     
     """ This function will approximate scaling factors for chlorine 36 production related
         to the geometry and the height of the preserved scarp 
@@ -33,7 +33,8 @@ def neutron_scaling (params, constants, N_eq):
                   scaling_factors, dictionnary caontaining the scaling factors"""
 
     scaling_factors={}
-    Hfinal = params.Hfinal # preserved scarp height(cm)
+    if Hfinal==0:
+        Hfinal = params.Hfinal # preserved scarp height(cm)
     alpha = params.alpha # colluium dip (degrees)
     beta = params.beta # preserved scarp dip (degrees)
     gamma = params.gamma # eroded scarp dip (degrees)
