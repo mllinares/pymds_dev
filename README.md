@@ -93,8 +93,8 @@ From terminal window inside the "example" directory :
 conda activate NAME_OF_YOUR_ENVIRONMENT
 nohup python3 invert.py
 ```
-This should take approximatly 3h to run on a standard home computer (CPU intel i7-1165G7, 2.80GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete.\
-The result can and useful informations be found in ```summary.txt file```, the following plots should be generated:
+This should take approximatly 19min to run on a laptop (CPU intel 12th gen i9-12900H 2.90 GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete.\
+The result and useful informations be found in ```summary.txt file```, the following plots should be generated:
 
 ![result](https://github.com/mllinares/pymds_dev/assets/126869078/ee8dc628-b5a7-4ad4-8ea9-92c840aa3118)
 
