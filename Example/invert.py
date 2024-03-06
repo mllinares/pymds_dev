@@ -38,38 +38,41 @@ height = param.h
 Hfinal = param.Hfinal
 trench_depth = param.trench_depth
 Hscarp = Hfinal - trench_depth
-sigAMS = param.sig_cl36AMS
+sigAMS = param.cl36AMS
 Data = torch.tensor(cl36AMS)
 var_cl36=np.var(cl36AMS)
 
 """ Chose parameters to invert """
 invert_slips = False # invert slip array ?
 use_rpt = True # use rupture package to find slips
-invert_sr = True # invert slip rate ?
+invert_sr = False # invert slip rate ?
 invert_quies = False # invert quiescence
 
 """ MCMC parameters, to be set with CAUTION """
 tic=time.time()
 pyro.set_rng_seed(57)
-w_step = 1  # number of warmup (~30% of total models)
+w_step = 10  # number of warmup (~30% of total models)
 nb_sample = 1000 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
-target_prob = 0.8 # target acceptancy probability (<1)
+target_prob = 0.8# target acceptancy probability (<1)
 
 #%% Find slip with rupture package if use_rpt = True
 if invert_slips == False and use_rpt == True:
-    slips_rpt = fig.precompute_slips(cl36AMS, height, number_of_events-1, plot=True, pen_algo=True, trench_depth=trench_depth)
+    slips_rpt = fig.precompute_slips(cl36AMS, height, number_of_events, plot=True, pen_algo=True, trench_depth=trench_depth)
     seismic_scenario['slips'] = slips_rpt
     number_of_events = len(slips_rpt) # If Pelt algo is used, the number of events can vary
 
 #%%Compute geometric scaling factors 
 scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, number_of_events+1)
 
+#%% Compute long term beforehand in case the SR is known
+if invert_sr==False:
+    long_term_36cl=forward.long_term(true_scenario, scaling_factors, constants, parameters, long_int=100, find_slip=invert_slips)
 #%% Defining MCMC model
 def model(obs):
     
     ages = torch.zeros((number_of_events))
-    ages[0] = pyro.sample('age1', dist.Uniform(2.0, 30*1e3))
+    ages[0] = pyro.sample('age1', dist.Uniform(2.0, 20*1e3))
     for i in range (1, number_of_events):
         max_age = ages[i-1]
         ages[i] = pyro.sample('age'+str(i+1), dist.Uniform(2.0, max_age))  
@@ -86,14 +89,17 @@ def model(obs):
         seismic_scenario['slips'] = true_scenario['slips']
         
     if invert_sr==True:
-        seismic_scenario['SR'] = pyro.sample('SR', dist.Uniform(0.1, 1.5))
+        seismic_scenario['SR'] = pyro.sample('SR', dist.Uniform(0.2, 2))
     else :
         seismic_scenario['SR'] = true_scenario['SR']
     seismic_scenario['preexp'] = true_scenario['preexp']
     seismic_scenario['quiescence'] = true_scenario['quiescence']
     sigma=pyro.sample('sigma', dist.Uniform(0, var_cl36*1e4)) # helps for the inference
     
-    t = forward.mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=200, find_slip = invert_slips)
+    if invert_sr==True:
+        t = forward.mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int=1000, seis_int=200, find_slip = invert_slips)
+    else:
+        t = forward.seismic(seismic_scenario, scaling_factors, constants, parameters,Ni=long_term_36cl, seis_int=200, find_slip = invert_slips)
     return pyro.sample('obs', dist.Normal(t, sigma), obs=obs)
 
 #%% Running MCMC
@@ -148,7 +154,7 @@ inferred_scenario['quiescence'] = true_scenario['quiescence']
 inferred_scenario['erosion_rate'] = true_scenario['erosion_rate']
 
 # Compute 36Cl for the median model
-cl_36_inferred=forward.mds_torch(inferred_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=200, find_slip = invert_slips)
+cl_36_inferred=forward.mds_torch(inferred_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=100, find_slip = invert_slips)
 
 # Compute all 36Cl models and save RMSw
 all_36cl_models=np.zeros((len(cl36AMS), len(all_age)))
@@ -162,7 +168,7 @@ for i in range (0, len(all_age)):
         inferred_scenario['SR'] = torch.tensor(all_sr[i])
     else :
         inferred_scenario['SR'] = true_scenario['SR']
-    all_36cl_models[:,i]=forward.mds_torch(inferred_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=200, find_slip = invert_slips)
+    all_36cl_models[:,i]=forward.mds_torch(inferred_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=100, find_slip = invert_slips)
     all_RMSw[i]=fig.RMSw(param.cl36AMS, all_36cl_models[:,i], incertitude=sigAMS)
 np.savetxt('inferred_cl36.txt', all_36cl_models)
 np.savetxt('RMSw_infered_models.txt', all_RMSw)
@@ -199,7 +205,7 @@ true_slips=true_scenario['slips']
     3) median model and greyfill between the last 70% of all models (when inversion is stable)"""
 fig.plot_profile(cl36AMS, param.sig_cl36AMS, height, cl_36_inferred, 'plot_median')
 fig.plot_min_max(cl36AMS, height-trench_depth, all_36cl_models, sigAMS=np.zeros((len(cl36AMS)))+np.min(cl36AMS)*0.1, slips=np.hstack(((slip_hlines-trench_depth)*1e-2, Hscarp*1e-2)), plot_name='all_models')
-fig.plot_min_max(cl36AMS, height-trench_depth, all_36cl_models[:,int(0.3*nb_sample)::], sigAMS=sigAMS, slips=np.hstack(((slip_hlines-trench_depth)*1e-2, Hscarp*1e-2)), plot_name='models_70_percent')
+fig.plot_min_max(cl36AMS, height-trench_depth, all_36cl_models[:,int(0.3*nb_sample)::], sigAMS=np.zeros((len(cl36AMS)))+np.min(cl36AMS)*0.1, slips=np.hstack(((slip_hlines-trench_depth)*1e-2, Hscarp*1e-2)), plot_name='models_70_percent')
 
 # plot sigma 
 fig.plot_variable_np(all_sigma, 'Sigma', 'Sigma')
