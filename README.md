@@ -51,7 +51,7 @@ gen_synthetics.py : generate a synthetic datafile\
 invert.py : invert your datafile
 3) Dependences\
 util folder : contains utlitary functions\
-chemestry_scaling.py : module containing functions for the chemestry scaling\
+chemistry_scaling.py : module containing functions for the chemistry scaling\
 geometric_scaling_factors : module containing functions for the scling associated to the geometry of the scarp
 
 ```format_your_data folder```:\
@@ -96,7 +96,6 @@ nohup python3 invert.py
 This should take approximatly 19min to run on a laptop (CPU intel 12th gen i9-12900H 2.90 GHz, RAM 16Go). If your specks are lower than those, the algorithm may take longer to complete.\
 The result and useful informations be found in ```summary.txt file```, the following plots should be generated:
 
-![result](https://github.com/mllinares/pymds_dev/assets/126869078/ee8dc628-b5a7-4ad4-8ea9-92c840aa3118)
 
 When the inversion is done, plots and ".txt" files are generated:
 
@@ -106,7 +105,7 @@ When the inversion is done, plots and ".txt" files are generated:
 - sigma.txt : infered sigma
 - summary.txt : summary of the inversion
 - nohup.out : progression of the algorithm (if you use nohup command to run the script)
-- slip.txt : infered slip (if inversed)
+- all_slip_corrected.txt : infered slip (if inversed)
 - SR.txt : infered long term slip rate (if inversed)
 
 Inside the example folder, you can find a folder called ```expected_results``` wich contains the expected plots and result files.
