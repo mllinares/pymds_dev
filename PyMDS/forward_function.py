@@ -54,20 +54,20 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     age_base = seismic_scenario['ages']
     age = age_base.clone().detach().numpy() 
     # Save age
-    load_ages=np.load('ages.npy')
+    load_ages=np.load('results/ages.npy')
     save_ages=np.concatenate((load_ages, age))
-    np.save('ages.npy', save_ages)
+    np.save('results/ages.npy', save_ages)
     
-    slip_base=seismic_scenario['slips']
+    slip_base = seismic_scenario['slips']
     slip = slip_base.clone().detach().numpy() 
-    
+    slip = np.abs(slip)
     # cumsum(slip) must be equal to Hfinal to avoid estimation of slip in non sampled part
     if (find_slip == True and np.sum(slip)<Hscarp) or (find_slip == True and np.sum(slip))>Hscarp:
-        slip = ((slip/np.sum(slip))*Hscarp) +1 # +1 because int(slips) is used below and sometimes the last sample is not included
-    # Saving slips
-    load_slips=np.load('slips.npy')
+        slip = ((slip/np.sum(slip))*Hscarp)+1 # +1 because int(slips) is used below and sometimes the last sample is not included
+        # Saving slips
+    load_slips=np.load('results/slips.npy')
     save_slips=np.concatenate((load_slips, slip))
-    np.save('slips.npy', save_slips)
+    np.save('results/slips.npy', save_slips)
     # Handling of quiescence period
     if seismic_scenario['quiescence'] !=0 :
         age = np.hstack((seismic_scenario['quiescence'] + age[0], age))
@@ -80,9 +80,9 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
      
     SR = seismic_scenario['SR']
     # Saving SR
-    load_SRs=np.load('SRs.npy')
-    save_slips=np.concatenate((load_SRs, SR))
-    np.save('SRs.npy', SR)
+    load_SRs=np.load('results/SRs.npy')
+    save_SRs=np.hstack((load_SRs, SR.clone().detach().numpy()))
+    np.save('results/SRs.npy', save_SRs)
     preexp = seismic_scenario['preexp']
     
     # attenuation constants from gscale
@@ -322,9 +322,9 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     Nf2=torch.tensor(Nf)
     
     # Writting final concentration file
-    cl_load=np.load('synthetic_cl36.npy')
+    cl_load=np.load('results/synthetic_cl36.npy')
     cl_save=np.concatenate((cl_load, Nf))
-    np.save('synthetic_cl36.npy', cl_save)
+    np.save('results/synthetic_cl36.npy', cl_save)
     return Nf2
 
 def long_term(seismic_scenario, scaling_factors, constants, parameters, long_int, find_slip):
@@ -501,22 +501,22 @@ def seismic(seismic_scenario, scaling_factors, constants, parameters, Ni, seis_i
     age_base = seismic_scenario['ages']
     age = age_base.clone().detach().numpy()
     # Save age
-    load_ages=np.load('ages.npy')
+    load_ages=np.load('results/ages.npy')
     save_ages=np.concatenate((load_ages, age))
-    np.save('ages.npy', save_ages)
+    np.save('results/ages.npy', save_ages)
     slip_base=seismic_scenario['slips']
     slip = slip_base.clone().detach().numpy() 
-    
+    slip = np.abs(slip)
     # Constant
     lambda36 = constants['lambda36']
     
     # cumsum(slip) must be equal to Hfinal to avoid estimation of slip in non sampled part
     if (find_slip == True and np.sum(slip)<Hscarp) or (find_slip == True and np.sum(slip))>Hscarp:
         slip = ((slip/np.sum(slip))*Hscarp)+1 # +1 because int(slips) is used below and sometimes the last sample is not included
-    # Saving slips
-    load_slips=np.load('slips.npy')
+        # Saving slips
+    load_slips=np.load('results/slips.npy')
     save_slips=np.concatenate((load_slips, slip))
-    np.save('slips.npy', save_slips)
+    np.save('results/slips.npy', save_slips)
     # Handling of quiescence period
     if seismic_scenario['quiescence'] !=0 :
         age = np.hstack((seismic_scenario['quiescence'] + age[0], age))
@@ -644,10 +644,10 @@ def seismic(seismic_scenario, scaling_factors, constants, parameters, Ni, seis_i
         Nf[j] = N_new 
     Nf2=torch.tensor(Nf)
     
-    cl_load=np.load('synthetic_cl36.npy')
+    cl_load=np.load('results/synthetic_cl36.npy')
     # print(len(cl_save), len(Nf))
     cl_save=np.concatenate((cl_load, Nf))
-    np.save('synthetic_cl36.npy', cl_save)
+    np.save('results/synthetic_cl36.npy', cl_save)
     
     
     return Nf2
