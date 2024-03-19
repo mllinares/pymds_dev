@@ -33,6 +33,7 @@ def add_noise(input_array, noise_level=0.8*1e5, write_data_file=False, data_file
             
     OUTPUTS : "noised" array, type : numpy array """
     
+    np.random.seed(0)# always get the same random noise
     noise = np.array(np.random.randn(len(input_array))) * noise_level # create random noise
     noisy_data = input_array+noise # add noise to your data
    
@@ -43,7 +44,7 @@ def add_noise(input_array, noise_level=0.8*1e5, write_data_file=False, data_file
     
     return noisy_data
 
-def create_blank_file(number_of_samples=90, regular_spacing=True, spacing=10):
+def create_blank_file(Hfinal=901, regular_spacing=True, spacing=10):
     """ Generate a blank datafile to create a synthetic profile
     INPUT : seismic_scenario, a seismic scenario, dict
             scaling_factors, geometric scaling factors (from gscale.py), dict
@@ -53,18 +54,19 @@ def create_blank_file(number_of_samples=90, regular_spacing=True, spacing=10):
             
     OUTPUT : synthetic_data_file, 2D array shape((number_of_samples, 66))
              saving of blank, .csv (delim=',') """
-             
+    
+    number_of_samples=len(np.arange(0, Hfinal, spacing))
     synthetic_data_file=np.zeros((number_of_samples, 66))
     if regular_spacing==True:
-        h_samples=np.linspace(0, spacing*(number_of_samples+1), number_of_samples)
+        h_samples=np.arange(0, Hfinal, spacing)
     else:
-        random_spacing=np.array(np.random.randn(number_of_samples)) * 0.0001
+        random_spacing=np.random.uniform(low=0.8, high=1.0, size=(number_of_samples,))*10
         h_samples=np.linspace(0, spacing, number_of_samples) + random_spacing
     synthetic_data_file[:, 57] = 1 # to avoid nan values
     synthetic_data_file[:, 60] = 1 # to avoid nan values
     synthetic_data_file[:, 61] = 38*1e5 # to avoid nan values
     synthetic_data_file[:, 62] = h_samples # height of samples
-    synthetic_data_file[:, 65] = 1e5 # incertitude on measured [36Cl] 
+    
     np.savetxt('blank.csv', synthetic_data_file, delimiter=',')
     return
     
@@ -88,7 +90,7 @@ def gen_synthetic_data(seismic_scenario, blank_datafile, adding_noise=True, nois
     scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, len(seismic_scenario['ages']))
    
     # 36 Cl profile
-    synthetic_profile = forward_function.mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int=100, seis_int=100)
+    synthetic_profile = forward_function.mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=200)
     
     # Adding noise
     if adding_noise==True:
@@ -97,7 +99,8 @@ def gen_synthetic_data(seismic_scenario, blank_datafile, adding_noise=True, nois
    
     # Writting and saving to file
     blank_datafile[:, 64] = synthetic_profile
-    blank_datafile[:, 65] = min(blank_datafile[:,64])*0.1
+    np.random.seed(0)
+    blank_datafile[:, 65] = np.random.uniform(low=0.1, high=1.0, size=(len(blank_datafile[:,64]),)) * min(blank_datafile[:,64])*0.05 # create random incertitude on measurement
     np.savetxt('synthetic_file.csv',blank_datafile, delimiter=',')
     return synthetic_profile
 
@@ -105,10 +108,10 @@ def gen_synthetic_data(seismic_scenario, blank_datafile, adding_noise=True, nois
 #%% Main script
 # Seismic scenario stored in a dict
 seismic_scenario={}
-seismic_scenario['ages'] = torch.tensor([9000, 7000, 2500, 500]) # exhumation ages, older to younger (yr)
-seismic_scenario['slips'] = torch.tensor([150, 160,  300, 300]) # slip corresponding to the events (cm)
-seismic_scenario['SR'] = 0.5 # long term slip rate of your fault (mm/yr)
-seismic_scenario['preexp'] = 5*1e3 # Pre-expositionn period (yr)
+seismic_scenario['ages'] = torch.tensor([9000, 4000, 1500]) # exhumation ages, older to younger (yr)
+seismic_scenario['slips'] = torch.tensor([300, 300, 300]) # slip corresponding to the events (cm)
+seismic_scenario['SR'] = 0.8 # long term slip rate of your fault (mm/yr)
+seismic_scenario['preexp'] = 50*1e3 # Pre-expositionn period (yr)
 seismic_scenario['start_depth'] = seismic_scenario['preexp'] * seismic_scenario['SR'] * 1e-1 # (cm) along the fault plane
 seismic_scenario['quiescence'] = 0*1e3 # Quiescence period (yr), must be older than last event
 
