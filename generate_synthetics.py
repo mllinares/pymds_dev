@@ -56,7 +56,7 @@ def create_blank_file(Hfinal=901, regular_spacing=True, spacing=10):
             
     OUTPUT : synthetic_data_file, 2D array shape((number_of_samples, 66))
              saving of blank, .csv (delim=',') """
-    print('blank')
+    print('Creating blank file')
     number_of_samples=len(np.arange(0, Hfinal, spacing))
     synthetic_data_file=np.zeros((number_of_samples, 66))
     if regular_spacing==True:
@@ -87,7 +87,8 @@ def gen_synthetic_data(seismic_scenario, blank_datafile, adding_noise=True, nois
     import parameters
     from constants import constants
     param = parameters.param()
-        
+    
+    print('Computing synthetic profile')    
     # Scaling factors
     scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, len(seismic_scenario['ages']))
    
@@ -112,7 +113,7 @@ def gen_synthetic_data(seismic_scenario, blank_datafile, adding_noise=True, nois
 seismic_scenario={}
 seismic_scenario['ages'] = torch.tensor([9000, 4000, 1500]) # exhumation ages, older to younger (yr)
 seismic_scenario['slips'] = torch.tensor([300, 300, 300]) # slip corresponding to the events (cm)
-seismic_scenario['SR'] = 0.8 # long term slip rate of your fault (mm/yr)
+seismic_scenario['SR'] = torch.tensor([0.8]) # long term slip rate of your fault (mm/yr)
 seismic_scenario['preexp'] = 50*1e3 # Pre-expositionn period (yr)
 seismic_scenario['start_depth'] = seismic_scenario['preexp'] * seismic_scenario['SR'] * 1e-1 # (cm) along the fault plane
 seismic_scenario['quiescence'] = 0*1e3 # Quiescence period (yr), must be older than last event
