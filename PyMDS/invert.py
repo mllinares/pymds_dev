@@ -63,8 +63,8 @@ else:
 """ MCMC parameters, to be set with CAUTION """
 tic=time.time()
 pyro.set_rng_seed(57) # Random seed
-w_step = 5  # number of warmup (~30% of total models)0
-nb_sample = 5 # number of samples
+w_step = 10  # number of warmup (~30% of total models)0
+nb_sample = 100 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
 target_prob = 0.8 # target acceptancy probability (<1)
 
