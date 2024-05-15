@@ -32,8 +32,7 @@ def add_noise(input_array, noise_level=0.8*1e5, write_data_file=False, data_file
              data_file, rock data file, default='', type=np.arra(nb_sample, 66)
             
     OUTPUTS : "noised" array, type : numpy array """
-    
-    np.random.seed(0)# always get the same random noise
+    np.random.seed(101)
     noise = np.array(np.random.randn(len(input_array))) * noise_level # create random noise
     noisy_data = input_array+noise # add noise to your data
    
@@ -44,10 +43,8 @@ def add_noise(input_array, noise_level=0.8*1e5, write_data_file=False, data_file
     
     return noisy_data
 
-def create_blank_file(Hfinal=901, regular_spacing=True, spacing=10):
+def create_blank_file(Hfinal=900, regular_spacing=True, spacing=10):
     """ Generate a blank datafile to create a synthetic profile
-    If no parameter is entered, the profile will contain 90 samples with a spacing of 10cm
-    
     INPUT : seismic_scenario, a seismic scenario, dict
             scaling_factors, geometric scaling factors (from gscale.py), dict
             number_of_samples, number of 36Cl samples, int (default 90)
@@ -56,19 +53,20 @@ def create_blank_file(Hfinal=901, regular_spacing=True, spacing=10):
             
     OUTPUT : synthetic_data_file, 2D array shape((number_of_samples, 66))
              saving of blank, .csv (delim=',') """
-    print('Creating blank file')
-    number_of_samples=len(np.arange(0, Hfinal, spacing))
+    
+    number_of_samples=int(Hfinal/spacing)
     synthetic_data_file=np.zeros((number_of_samples, 66))
     if regular_spacing==True:
         h_samples=np.arange(0, Hfinal, spacing)
     else:
-        random_spacing=np.random.uniform(low=0.8, high=1.0, size=(number_of_samples,))*10
+        np.random.seed(101)
+        random_spacing=np.array(np.random.randn(number_of_samples)) * 0.0001
         h_samples=np.linspace(0, spacing, number_of_samples) + random_spacing
     synthetic_data_file[:, 57] = 1 # to avoid nan values
     synthetic_data_file[:, 60] = 1 # to avoid nan values
     synthetic_data_file[:, 61] = 38*1e5 # to avoid nan values
     synthetic_data_file[:, 62] = h_samples # height of samples
-    
+    synthetic_data_file[:, 65] = 1e5 # incertitude on measured [36Cl] 
     np.savetxt('blank.csv', synthetic_data_file, delimiter=',')
     return
     
@@ -87,8 +85,7 @@ def gen_synthetic_data(seismic_scenario, blank_datafile, adding_noise=True, nois
     import parameters
     from constants import constants
     param = parameters.param()
-    
-    print('Computing synthetic profile')    
+        
     # Scaling factors
     scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, len(seismic_scenario['ages']))
    
@@ -102,8 +99,7 @@ def gen_synthetic_data(seismic_scenario, blank_datafile, adding_noise=True, nois
    
     # Writting and saving to file
     blank_datafile[:, 64] = synthetic_profile
-    np.random.seed(0)
-    blank_datafile[:, 65] = np.random.uniform(low=0.1, high=1.0, size=(len(blank_datafile[:,64]),)) * min(blank_datafile[:,64])*0.05 # create random incertitude on measurement
+    blank_datafile[:, 65] = min(blank_datafile[:,64])*0.03
     np.savetxt('synthetic_file.csv',blank_datafile, delimiter=',')
     return synthetic_profile
 
@@ -113,20 +109,20 @@ def gen_synthetic_data(seismic_scenario, blank_datafile, adding_noise=True, nois
 seismic_scenario={}
 seismic_scenario['ages'] = torch.tensor([9000, 4000, 1500]) # exhumation ages, older to younger (yr)
 seismic_scenario['slips'] = torch.tensor([300, 300, 300]) # slip corresponding to the events (cm)
-seismic_scenario['SR'] = torch.tensor([0.8]) # long term slip rate of your fault (mm/yr)
+seismic_scenario['SR'] = 0.8 # long term slip rate of your fault (mm/yr)
 seismic_scenario['preexp'] = 50*1e3 # Pre-expositionn period (yr)
 seismic_scenario['start_depth'] = seismic_scenario['preexp'] * seismic_scenario['SR'] * 1e-1 # (cm) along the fault plane
 seismic_scenario['quiescence'] = 0*1e3 # Quiescence period (yr), must be older than last event
 
 # Handling of quiescence period
-if seismic_scenario['quiescence'] !=0 :
+if seismic_scenario['quiescence'] !=0:
     seismic_scenario['ages'] = np.hstack((seismic_scenario['quiescence'] + seismic_scenario['ages'][0], seismic_scenario['ages']))
     seismic_scenario['slips'] = np.hstack((0, seismic_scenario['slips']))
 
 # Start creating synthetic datafile
-create_blank_file(Hfinal=np.sum(seismic_scenario['slips'].detach().numpy()+1)) 
+create_blank_file()
 data_blank = np.loadtxt('blank.csv', delimiter=',')
-synth = gen_synthetic_data(seismic_scenario, data_blank, noise_level=4*1e5)
+synth = gen_synthetic_data(seismic_scenario, data_blank, noise_level=6*1e5)
 
 #%% Plotting
 synthetic_data = np.loadtxt('synthetic_file.csv', delimiter=',')
@@ -138,4 +134,5 @@ plt.errorbar(synthetic_data[:,64], synthetic_data[:, 62], xerr=synthetic_data[:,
 if os.path.isfile('profile_before_noise.csv')==True:
     synthetic_no_noise = np.loadtxt('profile_before_noise.csv', delimiter=',')
     plt.plot(synthetic_no_noise, synthetic_data[:, 62], marker='', linestyle='-', color='orchid', label='Without noise')
+    plt.savefig('synth_profile.png', dpi=1200)
 plt.legend()

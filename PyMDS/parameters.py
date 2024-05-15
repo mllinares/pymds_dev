@@ -15,9 +15,9 @@ class param:
         self.site_name='ma3'
         self.rho_rock = 2.66 # rock mean density
         self.rho_coll = 1.5 # colluvium mean density
-        self.alpha = 25 # colluvium dip (degrees)
-        self.beta = 55 # scarp dip (degrees)
-        self.gamma = 35 # eroded scarp dip (degrees)
+        self.alpha = 30 # colluvium dip (degrees)
+        self.beta = 45 # scarp dip (degrees)
+        self.gamma = 30 # eroded scarp dip (degrees)
         self.erosion_rate = 0 # Erosion rate (mm/yr)
         self.trench_depth = 457 # trench depth (cm)
         self.long_term_relief = 500 * 1e2 # cumulative height due to long term history (cm)

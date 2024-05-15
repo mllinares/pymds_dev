@@ -73,7 +73,7 @@ def precompute_slips(cl_36, h_samples, nb_bkps, model_name='normal', pen_algo=Fa
     # Use of dynamic algorithm (no evaluation of minimum number of event)
     if pen_algo==False:
         slips = np.zeros((nb_bkps))
-        algo = rpt.Dynp(model=model_name, min_size=2, jump=30).fit(cl_36_for_rpt) # l1, l2, normal, rbf, rank
+        algo = rpt.Dynp(model=model_name, min_size=2, jump=10).fit(cl_36_for_rpt) # l1, l2, normal, rbf, rank
         result = np.array(algo.predict(n_bkps=nb_bkps))-1
         print(result, len(h_samples))
         h_bkps = np.hstack((h_samples_for_rpt[result][::-1], min_height)) # Get height of break-ups
@@ -85,7 +85,7 @@ def precompute_slips(cl_36, h_samples, nb_bkps, model_name='normal', pen_algo=Fa
         print('slips:', slips, 'sum:', np.sum(slips)) 
         
     if pen_algo == True:
-        algo = rpt.Pelt(model=model_name, min_size=2, jump=30).fit(cl_36_for_rpt) # define algo, min_size: min distance btwn change pts, jump : grid of possible change pts
+        algo = rpt.Pelt(model=model_name, min_size=2, jump=10).fit(cl_36_for_rpt) # define algo, min_size: min distance btwn change pts, jump : grid of possible change pts
         result = np.array(algo.predict(pen=0.001))-1 # Fit the 36cl signal, pen: penalty value, -1 to get the correct indexes (rpt uses len instead of indexes)
         print(result, len(h_samples))
         h_bkps = np.hstack((h_samples_for_rpt[result][::-1], min_height)) # Get height of break-ups
