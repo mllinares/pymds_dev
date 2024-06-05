@@ -94,7 +94,7 @@ def model(obs):
     seismic_scenario['ages'] = ages
     
     # Slips : can be either infered through MCMC or with precomputation
-    if invert_slips == True:
+    if invert_slips == True and use_rpt==False:
         slips = torch.zeros((number_of_events))
         slips[0]=pyro.sample('slip1', dist.Uniform(1, 400))
         for i in range(1, number_of_events):
