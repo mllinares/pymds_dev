@@ -442,11 +442,11 @@ def WRMSE(observed_data, modeled_data, incertitude=np.array([])):
     rmsw=np.sum(np.sqrt(((observed_data-modeled_data)/incertitude)**2))
     return rmsw
     
-def AICC(measurements, calculations, nb_param):
+def AICC(observed_data, modeled_data, nb_param):
     """ This function allows to calculate the Akaike criterion
     
-        INPUTS : measurements, your data, numpy array
-                 calculations, your synthetic data, numpy array
+        INPUTS : observed_data, your data, numpy array
+                 modeled_data, your synthetic data, numpy array
                  nb_param, integer
         
         OUTPUT : aicc, Akaike criterion, numpy array
@@ -454,8 +454,8 @@ def AICC(measurements, calculations, nb_param):
         From modelscarp.m, A. Schlagenhauf et al. 2010, adapted for python by M. Llinares
         """
 
-    n = len(measurements) 
-    aicc = np.sum((measurements - calculations)**2)
+    n = len(observed_data) 
+    aicc = np.sum((observed_data - modeled_data)**2)
     aicc = n*np.log(aicc/n) + (2*n*nb_param)/(n - nb_param - 1)
     return aicc
     
