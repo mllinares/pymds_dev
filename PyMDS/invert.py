@@ -16,7 +16,6 @@ import pyro
 import numpy as np
 import pyro.distributions as dist
 import time
-import post_process as fig
 import util.post_processing as post
 import sys
 from seismic_scenario import seismic_scenario as true_scenario
@@ -27,7 +26,7 @@ import pickle
 
 
 #%% Initialization
-sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
+# sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
 today = datetime.now().strftime("%d/%m/%Y %H:%M:%S") # get today's date day/month/year hour:min:sec
 
 """ Input seismic scenario """
@@ -62,17 +61,19 @@ else:
     
 """ MCMC parameters, to be set with CAUTION """
 tic=time.time()
-pyro.set_rng_seed(57) # Random seed
-w_step = 10  # number of warmup (~30% of total models)0
-nb_sample = 100 # number of samples
+seed=int(np.random.uniform(low=0, high=1000))
+pyro.set_rng_seed(seed) # Random seed
+w_step = 10   # number of warmup (~30% of total models)0
+nb_sample = 3000 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
-target_prob = 0.8 # target acceptancy probability (<1)
+target_prob = 0.7 # target acceptancy probability (<1)
 
 #%% Find slip with rupture package if use_rpt = True
 if use_rpt == True:
-    slips_rpt = fig.precompute_slips(cl36AMS, height, number_of_events-1, plot=True, pen_algo=True, trench_depth=trench_depth)
+    slips_rpt = post.precompute_slips(cl36AMS, height, number_of_events-1, plot=True, pen_algo=True, trench_depth=trench_depth)
     seismic_scenario['slips'] = slips_rpt
     number_of_events = len(slips_rpt) # If Pelt algo is used, the number of events can vary
+    slip_uncertainty=Hfinal/(number_of_events*2)
 
 #%%Compute geometric scaling factors 
 scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, number_of_events+1)
@@ -104,8 +105,9 @@ def model(obs):
     # Use rpt package but add some incertitude
     elif allow_rpt_incertitude==True:
         slips = torch.zeros((number_of_events))
+        
         for i in range(0, number_of_events):
-            slips[i] = pyro.sample('slip'+str(i+1), dist.Normal(slips_rpt[i], 50))
+            slips[i] = pyro.sample('slip'+str(i+1), dist.Uniform(slips_rpt[i]-slip_uncertainty,slips_rpt[i]+slip_uncertainty))
         seismic_scenario['slips'] = slips
         
     # Only rpt package
@@ -166,7 +168,7 @@ if invert_sr==True:
 
 #%% Get statistics on sampled results
 median_age, mean_age, std_age, var_age = post.get_statistics_2D(ages, plot=True, namefig='ages')
-median_age70, mean_age70, std_age70, var_age70=post.get_statistics_2D(ages[int(0.7*len(ages)):len(ages),:], plot=True, namefig='ages70')
+median_age70, mean_age70, std_age70, var_age70 = post.get_statistics_2D(ages[int(0.7*len(ages)):len(ages),:], plot=True, namefig='ages70')
 
 if find_slip==True:
     median_slip, mean_slip, std_slip, var_slip = post.get_statistics_2D(slips, plot=True, namefig='slips')
@@ -177,7 +179,7 @@ if invert_sr==True:
     median_sr70, mean_sr70, std_sr70, var_sr70 = post.get_statistics_1D(SRs[int(0.7*len(ages)):len(ages)], plot=True, namefig='sr70')
 
 #%% printing info on the inversion inside summary.txt file
-print('\n SUMMARY', param.site_name, ' \n ', 'warmup : ', w_step, '| samples : ', nb_sample, ' \n tree depth :', tree_depth, ' |target acceptancy :', target_prob, '\n\n  age :', median_age70, '\n  rhat_age :', rhat_age)
+print('\n SUMMARY', param.site_name, '\n ','seed : ', seed, '\n ', 'warmup : ', w_step, '| samples : ', nb_sample, ' \n tree depth :', tree_depth, ' |target acceptancy :', target_prob, '\n\n  age :', median_age70, '\n  rhat_age :', rhat_age)
 if find_slip == True:
     print('\n  slip :', median_slip70, '\n  rhat_slip :', rhat_slip)
 if invert_sr == True:
@@ -241,12 +243,12 @@ if invert_slips==True:
             post.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age70[i], median_slip70[i]]))
     elif true_scenario_known == True and number_of_events==len(true_slips):
         for i in range (0, number_of_events):
-            fig.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), true_values=np.array([true_scenario['ages'][i], true_scenario['slips'][i]]), median_values=np.array([median_age70[i], median_slip70[i]]))
-            fig.plot_variable_np(slips[:, i],true_value=true_slips[i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1)
+            post.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), true_values=np.array([true_scenario['ages'][i], true_scenario['slips'][i]]), median_values=np.array([median_age70[i], median_slip70[i]]))
+            post.plot_variable_np(slips[:, i],true_value=true_slips[i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1)
     elif true_scenario_known==True and number_of_events!=len(true_age):
         for i in range (0, number_of_events):
-            fig.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age70[i], median_slip70[i]]))
-            fig.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1)+'_with_true_values', true_values=np.array([true_scenario['ages'].numpy(), true_scenario['slips'].numpy()]), median_values=np.array([median_age70[i], median_slip70[i]]))
+            post.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age70[i], median_slip70[i]]))
+            post.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1)+'_with_true_values', true_values=np.array([true_scenario['ages'].numpy(), true_scenario['slips'].numpy()]), median_values=np.array([median_age70[i], median_slip70[i]]))
 
 if invert_sr == True and true_scenario_known==True:
     post.plot_variable_np(SRs, 'SR', 'SR (mm/yr)', true_value = true_scenario['SR'])
@@ -255,13 +257,18 @@ elif invert_sr == True and true_scenario_known==False:
 
 #%% Posterior samples
 post_ages=post.get_posterior_ages('posterior_samples', number_of_events, nb_sample)
-median_post_age70, mean_post_age70, std_post_age70, var_post_age70=post.get_statistics_2D(ages[int(0.7*len(post_ages)):len(post_ages),:], plot=True, namefig='post_ages70')
+post_ages70=post_ages[int(0.7*len(post_ages))::, :]
+median_post_age70, mean_post_age70, std_post_age70, var_post_age70=post.get_statistics_2D(post_ages70, plot=True, namefig='post_ages70')
+
 if find_slip == True:
     post_slips=post.get_posterior_slips('posterior_samples', number_of_events, nb_sample, Hscarp)
-    median_post_slip70, mean_post_slip70, std_post_slip70, var_post_slip70=post.get_statistics_2D(ages[int(0.7*len(post_ages)):len(post_ages),:], plot=True, namefig='post_slips70')
+    post_slips70=post_slips[int(0.7*len(post_ages))::, :]
+    median_post_slip70, mean_post_slip70, std_post_slip70, var_post_slip70=post.get_statistics_2D(post_slips70, plot=True, namefig='post_slips70')
+    
 if invert_sr==True and true_scenario_known==True:
     post_sr=post.get_posterior_SR('posterior_samples')
-    median_post_sr70, mean_post_sr70, std_post_sr70, var_post_sr70 = post.get_statistics_1D(post_sr[int(0.7*len(ages)):len(ages)], plot=True, namefig='post_sr70')
+    post_sr70=post_sr[int(0.7*len(post_ages))::]
+    median_post_sr70, mean_post_sr70, std_post_sr70, var_post_sr70 = post.get_statistics_1D(post_sr70, plot=True, namefig='post_sr70')
 
 #%% Plot slip through time and 2D plots (posterior)
 if true_scenario_known == False or number_of_events!=len(true_age):
@@ -280,7 +287,7 @@ if invert_slips==True:
     elif true_scenario_known == True and number_of_events==len(true_slips):
         for i in range (0, number_of_events):
             # fig.plot_2D(post_ages[:,i], post_slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1)+'_posterior', true_values=np.array([true_scenario['ages'][i], true_scenario['slips'][i]]), median_values=np.array([median_post_age70[i], median_post_slip70[i]]))
-            fig.plot_variable_np(post_slips[:, i],true_value=true_slips[i], title='Slip '+str(i+1)+'_posterior', var_name='Slip', num_fig=i+1)
+            post.plot_variable_np(post_slips[:, i],true_value=true_slips[i], title='Slip '+str(i+1)+'_posterior', var_name='Slip', num_fig=i+1)
     # elif true_scenario_known==True and number_of_events!=len(true_age):
     #     for i in range (0, number_of_events):
     #         fig.plot_2D(post_ages[:,i], post_slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1)+'_posterior', median_values=np.array([median_post_age70[i], median_post_slip70[i]]))
@@ -291,7 +298,33 @@ if invert_sr == True and true_scenario_known==True:
 elif invert_sr == True and true_scenario_known==False:
     post.plot_variable_np(post_sr, 'SR_posterior', 'SR (mm/yr)')
 #%% Plots posteriors
+# Compute all 36Cl models and save RMSw
+cl36_models_post70=np.zeros((len(cl36AMS), len(post_ages70)))
+RMSE_post70=np.zeros((len(post_ages70)))
+inferred_scenario70={}
+inferred_scenario70['preexp'] = true_scenario['preexp']
+inferred_scenario70['quiescence'] = true_scenario['quiescence']
+for i in range (0, len(post_ages70)):
+    inferred_scenario70['ages'] = torch.tensor(post_ages70[i])
+    if invert_slips == True:
+       inferred_scenario70['slips'] = torch.tensor(post_slips70[i])
+    if invert_sr == True:
+        inferred_scenario70['SR'] = torch.tensor(post_sr70[i])
+    else :
+        inferred_scenario70['SR'] = true_scenario['SR']
+    cl36_models_post70[:,i]=forward.mds_torch(inferred_scenario70, scaling_factors, constants, parameters, long_int=500, seis_int=200, find_slip = invert_slips)
+    RMSE_post70[i]=post.WRMSE(param.cl36AMS, cl36_models_post70[:,i], incertitude=sigAMS)
+np.savetxt('cl36_models_post70.txt', cl36_models_post70)
+np.savetxt('RMSE_post70.txt', RMSE_post70)
+post.plot_min_max(cl36AMS, height*1e2, cl36_models_post70,Hscarp=Hfinal, trench_depth=0, sigAMS=sigAMS, slips=median_slip, plot_name='70_models')
 
-# toc_pp=time.time()
+# possible_ages=np.zeros((number_of_events,3))
+# for i in range(0, number_of_events):
+#     possible_ages[i]=(median_post_age70[i]-std_post_age70[i], median_post_age70[i], median_post_age70[i]+std_post_age70[i])
 
+# possible_slips=np.zeros((number_of_events,3))
+# for i in range(0, number_of_events):
+#     possible_slips[i]=(median_post_slip70[i]-std_post_slip70[i], median_post_slip70[i], median_post_slip70[i]+std_post_slip70[i])
+
+# possible_SRs=np.array([median_post_sr70-std_post_sr70, median_post_sr70, median_post_sr70+std_post_sr70])
 # print('\nTime for plotting : ', '{0:.2f}'.format((toc_pp-tic_pp)/60), 'min')
