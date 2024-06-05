@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import os
 
 
-""" Script to generate your synthtetic datafile:
+""" Script to generate your synthetic datafile:
     1) Edit parameter.py file : 
        Required : self.data = np.loadtxt('blank.csv', delimiter=',') # samples chemestry
        Optional : edit other values (angle, density)
