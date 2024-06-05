@@ -90,7 +90,7 @@ def gen_synthetic_data(seismic_scenario, blank_datafile, adding_noise=True, nois
     scaling_depth_rock, scaling_depth_coll, scaling_surf_rock, scaling_factors = geometric_scaling_factors.neutron_scaling(param, constants, len(seismic_scenario['ages']))
    
     # 36 Cl profile
-    synthetic_profile = forward_function.mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=200)
+    synthetic_profile = forward_function.mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int=500, seis_int=100)
     
     # Adding noise
     if adding_noise==True:
