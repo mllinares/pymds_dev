@@ -439,7 +439,7 @@ def WRMSE(observed_data, modeled_data, incertitude=np.array([])):
     
     if len(incertitude)==0:
         incertitude=np.ones((len(modeled_data))) # to avoid infinity value when incertitude is not known
-    rmsw=np.sum(np.sqrt(((observed_data-modeled_data)/incertitude)**2))
+    rmsw=np.sqrt(np.mean(((observed_data-modeled_data)/incertitude)**2))
     return rmsw
     
 def AICC(observed_data, modeled_data, nb_param):
