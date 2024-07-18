@@ -319,14 +319,3 @@ for i in range (0, len(post_ages70)):
 np.savetxt('cl36_models_post70.txt', cl36_models_post70)
 np.savetxt('RMSE_post70.txt', RMSE_post70)
 post.plot_min_max(cl36AMS, height*1e2, cl36_models_post70,Hscarp=Hfinal, trench_depth=0, sigAMS=sigAMS, slips=median_slip, plot_name='70_models')
-
-# possible_ages=np.zeros((number_of_events,3))
-# for i in range(0, number_of_events):
-#     possible_ages[i]=(median_post_age70[i]-std_post_age70[i], median_post_age70[i], median_post_age70[i]+std_post_age70[i])
-
-# possible_slips=np.zeros((number_of_events,3))
-# for i in range(0, number_of_events):
-#     possible_slips[i]=(median_post_slip70[i]-std_post_slip70[i], median_post_slip70[i], median_post_slip70[i]+std_post_slip70[i])
-
-# possible_SRs=np.array([median_post_sr70-std_post_sr70, median_post_sr70, median_post_sr70+std_post_sr70])
-# print('\nTime for plotting : ', '{0:.2f}'.format((toc_pp-tic_pp)/60), 'min')
