@@ -146,7 +146,7 @@ toc=time.time()
 posterior_samples = mcmc.get_samples()
 with open('posterior_samples.pickle', 'wb') as handle:
     pickle.dump(posterior_samples, handle, protocol=pickle.HIGHEST_PROTOCOL)
-with open('diagnosics.pickle', 'wb') as handle:
+with open('diagnostics.pickle', 'wb') as handle:
     pickle.dump(mcmc.diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
     
 print('MCMC done \n start time:', today,'runtime:', '{0:.2f}'.format((toc-tic)/3600), 'hours \n')
