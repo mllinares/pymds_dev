@@ -7,10 +7,12 @@ Created on Fri Mar 15 11:25:39 2024
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 import pickle
 import itertools
 import ruptures as rpt
 import torch
+from scipy.stats import gaussian_kde
 
 #%%
 def precompute_slips(cl_36, h_samples, nb_bkps, model_name='normal', pen_algo=False, max_bkps=15, plot=False, trench_depth=0):
@@ -91,6 +93,7 @@ def create_save_file(number_of_events, cl36AMS, invert_slips=False, invert_SR=Fa
         np.save('results/slips.npy', np.ones((number_of_events)))
     if invert_SR==True:
         np.save('results/SRs.npy', np.ones((number_of_events)))
+    return
     
 def load_result(path, nb_columns=0):
     """ Load .npy result file saved during MCMC and the first line (used only to initialize the files).
@@ -119,6 +122,7 @@ def npy2csv(file_name):
     if os.path.isdir('csv_results')==False:
         os.mkdir('csv_results')
     np.savetxt('csv_results'+file_name+'.csv', array_to_convert, delimiter=',')
+    return
 
 #%% Result file management (posterior models)
 def get_posterior_ages(dict_name, nb_events, nb_samples):
@@ -267,7 +271,9 @@ def plot_profile(clAMS, sigAMS, height, trench_depth, inferred_cl36, plot_name):
     plt.ylabel('Height (m)')
     plt.legend()
     plt.savefig(plot_name+'.png', dpi = 1200)
-    
+    plt.close('all')
+    return 
+
 def plot_rpt(sample_height, cl36_profile, ruptures, trench_depth=0):
     """ Plot the ruptures found by the rupture package
     INPUTS : sample_height, height of the samples, type : 1D array (torch or numpy)
@@ -280,6 +286,8 @@ def plot_rpt(sample_height, cl36_profile, ruptures, trench_depth=0):
     plt.xlabel('[$^{36}$Cl] (at/g)')
     plt.ylabel('Height (cm)')
     plt.savefig('ruptures.png', dpi=1200)
+    plt.close('all')
+    return
     
 def plot_variable_np(inferred_values, title, var_name, true_value = 1e-38, num_fig = 1):
     
@@ -330,6 +338,8 @@ def plot_variable_np(inferred_values, title, var_name, true_value = 1e-38, num_f
     plt.legend()
     # plt.tight_layout()
     plt.savefig(title+'.png', dpi=1200)
+    plt.close('all')
+    return
 
 def get_hlines(Hmax, slips):
     """ Get position of slips (useful for plotting)
@@ -397,6 +407,8 @@ def plot_min_max(clAMS, height, inferred_cl36, Hscarp, trench_depth, plot_name='
     plt.ylabel('Height (m)')
     plt.legend()
     plt.savefig(plot_name+'.png', dpi = 1200)
+    plt.close('all')
+    return
 
 def plot_2D(Var1, Var2, RMSE, x_label, y_label, title, true_values=np.array([]), median_values=np.array([])):
     
@@ -425,7 +437,66 @@ def plot_2D(Var1, Var2, RMSE, x_label, y_label, title, true_values=np.array([]),
     plt.ylabel(y_label)
     plt.colorbar(label='Weighted RMSE')
     plt.savefig(title+'.png', dpi=1200)
+    plt.close('all')
+    return
 
+def scatter_hist(x, y, hist_colors, cmap_density='viridis_r', vlines_color='firebrick'):
+    
+    
+    # Start with a square Figure.
+    # Draw the scatter plot and marginals.
+    fig = plt.figure(figsize=(6, 6))
+
+    # Add a gridspec with two rows and two columns and a ratio of 1 to 4 between
+    # the size of the marginal Axes and the main Axes in both directions.
+    # Also adjust the subplot parameters for a square plot.
+    gs = fig.add_gridspec(2, 2,  width_ratios=(4, 1), height_ratios=(1, 4),
+                          left=0.1, right=0.9, bottom=0.1, top=0.9,
+                          wspace=0.05, hspace=0.05)
+    # Create the Axes.
+    ax = fig.add_subplot(gs[1, 0])
+    ax_histx = fig.add_subplot(gs[0, 0], sharex=ax)
+    ax_histy = fig.add_subplot(gs[1, 1], sharey=ax)
+    
+    # no labels for the histograms
+    ax_histx.tick_params(axis="x", labelbottom=False)
+    ax_histy.tick_params(axis="y", labelleft=False)
+
+    number_of_events=np.shape(x)[1]
+    cm = matplotlib.colormaps[cmap_density] # define a colormap
+    max_bar_heights_x=np.zeros((number_of_events)) # store the max bar height to define the vlines later
+    max_bar_heights_y=np.zeros((number_of_events))
+    median_x=np.zeros((number_of_events)) # store the median value to define the vlines later
+    median_y=np.zeros((number_of_events))
+    
+    # the scatter plot: 
+    for i in range(0, np.shape(x)[1]):
+        try:
+            xy_kde = np.vstack([x[:,i], y[:,i]])
+            z = gaussian_kde(xy_kde)(xy_kde) # first calculate the density of points
+            ax.scatter(x[:,i], y[:,i], c=z, cmap=cm, alpha=0.01) # plot with a cmap corresponding to the density of points
+        except:
+            print('Density could not be estimated, cmap was not applied')
+            ax.scatter(x[:,i], y[:,i], c='black', alpha=0.01) # plot with a cmap corresponding to the density of points
+    print('out')
+    # the histograms : in a loop to vary the color of the histogram
+    for i in range(0, number_of_events):
+        bar_heights_x, bins, patches=ax_histx.hist(x[:,i], color=hist_colors[i], alpha=0.3)
+        bar_heights_y, bins, patches=ax_histy.hist(y[:,i], bins=int((np.min(y[:,i])+np.max(y[:,i]))/20), orientation='horizontal', color=hist_colors[i])
+        max_bar_heights_x[i]=np.max(bar_heights_x)
+        max_bar_heights_y[i]=np.max(bar_heights_y)
+        median_x[i]=np.median(x[:,i])
+        median_y[i]=np.median(y[:,i])
+    
+    # plot vertical lines corresponding to the median value on the histograms
+    ax_histx.vlines(median_x, 0, np.max(max_bar_heights_x), color=vlines_color)
+    ax_histy.hlines(median_y, 0, np.max(max_bar_heights_y), color=vlines_color)
+    ax.set_xlabel('Ages (yr BP)') # x label
+    ax.set_ylabel('Slips (cm)') # y label
+    plt.savefig('scatter_plot.png', dpi=1200)
+    print('plot end')
+    plt.close('all')
+    return
     
 # %% computational functions
 def WRMSE(observed_data, modeled_data, incertitude=np.array([])):
@@ -439,14 +510,15 @@ def WRMSE(observed_data, modeled_data, incertitude=np.array([])):
     
     if len(incertitude)==0:
         incertitude=np.ones((len(modeled_data))) # to avoid infinity value when incertitude is not known
-    rmsw=np.sqrt(np.mean(((observed_data-modeled_data)/incertitude)**2))
-    return rmsw
     
-def AICC(observed_data, modeled_data, nb_param):
+    weighted_rmse=np.sqrt(np.mean(((observed_data-modeled_data)/incertitude)**2))
+    return weighted_rmse
+    
+def AICC(measurements, calculations, nb_param):
     """ This function allows to calculate the Akaike criterion
     
-        INPUTS : observed_data, your data, numpy array
-                 modeled_data, your synthetic data, numpy array
+        INPUTS : measurements, your data, numpy array
+                 calculations, your synthetic data, numpy array
                  nb_param, integer
         
         OUTPUT : aicc, Akaike criterion, numpy array
@@ -454,8 +526,8 @@ def AICC(observed_data, modeled_data, nb_param):
         From modelscarp.m, A. Schlagenhauf et al. 2010, adapted for python by M. Llinares
         """
 
-    n = len(observed_data) 
-    aicc = np.sum((observed_data - modeled_data)**2)
+    n = len(measurements) 
+    aicc = np.sum((measurements - calculations)**2)
     aicc = n*np.log(aicc/n) + (2*n*nb_param)/(n - nb_param - 1)
     return aicc
     

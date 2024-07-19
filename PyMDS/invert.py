@@ -64,7 +64,7 @@ tic=time.time()
 seed=int(np.random.uniform(low=0, high=1000))
 pyro.set_rng_seed(seed) # Random seed
 w_step = 10   # number of warmup (~30% of total models)0
-nb_sample = 3000 # number of samples
+nb_sample = 5 # number of samples
 tree_depth = 1 # maximum probability tree depth (min: 4, max: 10) 
 target_prob = 0.7 # target acceptancy probability (<1)
 
@@ -146,6 +146,7 @@ toc=time.time()
 posterior_samples = mcmc.get_samples()
 with open('posterior_samples.pickle', 'wb') as handle:
     pickle.dump(posterior_samples, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
 with open('diagnostics.pickle', 'wb') as handle:
     pickle.dump(mcmc.diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
     
@@ -319,3 +320,16 @@ for i in range (0, len(post_ages70)):
 np.savetxt('cl36_models_post70.txt', cl36_models_post70)
 np.savetxt('RMSE_post70.txt', RMSE_post70)
 post.plot_min_max(cl36AMS, height*1e2, cl36_models_post70,Hscarp=Hfinal, trench_depth=0, sigAMS=sigAMS, slips=median_slip, plot_name='70_models')
+
+hist_colors=['silver', 'brown', 'aqua']
+post.scatter_hist(post_ages70, post_slips70, hist_colors)
+# possible_ages=np.zeros((number_of_events,3))
+# for i in range(0, number_of_events):
+#     possible_ages[i]=(median_post_age70[i]-std_post_age70[i], median_post_age70[i], median_post_age70[i]+std_post_age70[i])
+
+# possible_slips=np.zeros((number_of_events,3))
+# for i in range(0, number_of_events):
+#     possible_slips[i]=(median_post_slip70[i]-std_post_slip70[i], median_post_slip70[i], median_post_slip70[i]+std_post_slip70[i])
+
+# possible_SRs=np.array([median_post_sr70-std_post_sr70, median_post_sr70, median_post_sr70+std_post_sr70])
+# print('\nTime for plotting : ', '{0:.2f}'.format((toc_pp-tic_pp)/60), 'min')
