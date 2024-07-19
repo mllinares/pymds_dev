@@ -26,7 +26,7 @@ import pickle
 
 
 #%% Initialization
-# sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
+sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
 today = datetime.now().strftime("%d/%m/%Y %H:%M:%S") # get today's date day/month/year hour:min:sec
 
 """ Input seismic scenario """
