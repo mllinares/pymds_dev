@@ -43,8 +43,8 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     coll = param.coll
     thick = param.thick
     th2 = param.th2  # 1/2 thickness converted in g.cm-2
-    h = param.h  # initial positions of the samples at surface (cm)
-    Z = param.Z
+    h = param.h.copy()  # initial positions of the samples at surface (cm)
+    Z = param.Z.copy()
     rho_rock = param.rho_rock
     rho_coll = param.rho_coll
     epsilon = param.erosion_rate
@@ -53,13 +53,21 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     # Seismic scenario
     age_base = seismic_scenario['ages']
     age = age_base.clone().detach().numpy() 
-    slip_base=seismic_scenario['slips']
-    slip = slip_base.clone().detach().numpy() 
+    # Save age
+    load_ages=np.load('results/ages.npy')
+    save_ages=np.concatenate((load_ages, age))
+    np.save('results/ages.npy', save_ages)
     
+    slip_base = seismic_scenario['slips']
+    slip = slip_base.clone().detach().numpy() 
+    slip = np.abs(slip)
     # cumsum(slip) must be equal to Hfinal to avoid estimation of slip in non sampled part
     if (find_slip == True and np.sum(slip)<Hscarp) or (find_slip == True and np.sum(slip))>Hscarp:
-        slip = ((slip/np.sum(slip))*Hscarp) +1 # +1 because int(slips) is used below and sometimes the last sample is not included
-    
+        slip = ((slip/np.sum(slip))*Hscarp)+1 # +1 because int(slips) is used below and sometimes the last sample is not included
+        # Saving slips
+    load_slips=np.load('results/slips.npy')
+    save_slips=np.concatenate((load_slips, slip))
+    np.save('results/slips.npy', save_slips)
     # Handling of quiescence period
     if seismic_scenario['quiescence'] !=0 :
         age = np.hstack((seismic_scenario['quiescence'] + age[0], age))
@@ -71,6 +79,10 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
         slip = np.hstack((slip, param.trench_depth))
      
     SR = seismic_scenario['SR']
+    # Saving SR
+    load_SRs=np.load('results/SRs.npy')
+    save_SRs=np.hstack((load_SRs, SR.clone().detach().numpy()))
+    np.save('results/SRs.npy', save_SRs)
     preexp = seismic_scenario['preexp']
     
     # attenuation constants from gscale
@@ -170,8 +182,8 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     rho_rock = param.rho_rock  # rock sample mean density
     thick = param.thick
     th2 = param.th2 # 1/2 thickness converted in g.cm-2
-    h = param.h  # initial positions of the samples at surface (cm)- integer
-    Z = param.Z
+    h = param.h.copy()  # initial positions of the samples at surface (cm)- integer
+    Z = param.Z.copy()
     data = param.data
     coll = param.coll
     EL = param.sf
@@ -192,9 +204,9 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     R = np.sum(slip)  # total cumulative slip
     Rc = np.cumsum(slip)   
     Rc = np.hstack((0, Rc)) # slip added up after each earthquake
-    d = data # substitution of matrix data by matrix d
-    d[:,62] = Z  # samples position along z
-    d[:,63] = (thick)*rho_rock  # thickness converted in g.cm-2
+    d = data.copy() # substitution of matrix data by matrix d
+    d[:,62] = Z.copy()  # samples position along z
+    d[:,63] = ((thick)*rho_rock).copy()  # thickness converted in g.cm-2
     slip_gcm2 = slip * rho_coll  # coseismic slip in g.cm-2
     sc = np.cumsum(slip_gcm2)  # cumulative slip after each earthquake (g.cm-2)
     sc0 = np.hstack((0, sc)) 
@@ -219,24 +231,26 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
        eo[np.where((Z > sc0[iseg]) & (Z <= sc0[iseg + 1]))] = epsilon*age[iseg]*0.1*rho_rock # in g.cm-2
     eo[-1] = epsilon*age[0]*0.1*rho_rock
     eo = eo + th2  # we add the 1/2 thickness : sample position along e is given at the sample center
-    j1 = np.where((Z >= sc0[0]) & (Z <= sc0[1]))[0]  # Averf samples from first exhumed segment 
+    j1 = np.where((Z >= sc0[0]) & (Z <= sc0[1]))[0]
+    
+    # print(j1)# Averf samples from first exhumed segment 
     N1 = np.zeros(len(Z[j1])) 
     tic2=time.time()
     # C1 - Loop - iteration on samples (k) from first exhumed segment
     for k in range (0, len(j1)):
         
         djk = d[j1[k],:]
-        hjk = h[j1[k]]   # position of sample k (cm)
+        hjk = h[j1[k]].copy()   # position of sample k (cm)
         N_in = float(Ni[j1[k]])  # initial concentration is Ni, obtained after pre-exposure
         ejk = eo[j1[k]]   # initial position along e is eo(j1(k)) 
-             
+        # print(h[j1[k]])
         # C2 - Loop - iteration on  time steps ii from t1 (= age eq1) to present
         for ii in range (0, int(age[0]), time_interval):
             
             P_cosmo, P_rad = clrock(djk, ejk, Lambda_f_e, so_f_e, EL_f[1], EL_mu[1]) 
-            scorr = S_S[int(hjk)]/S_S[0]     
+            scorr = S_S[int(hjk)-1]/S_S[0]     
             
-            P_tot = P_rad + P_cosmo*scorr            # only Pcosmogenic is scaled with scorr
+            P_tot = P_rad + P_cosmo*scorr# only Pcosmogenic is scaled with scorr
             N_out = N_in + (P_tot - lambda36*N_in)*time_interval  # minus radioactive decrease during same time step
             
             ejk = ejk - epsilon*time_interval*0.1*rho_rock  # new position along e at each time step (g.cm-2)
@@ -246,10 +260,11 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
     Nf[j1] = N1 
 
     # ITERATION ON SEGMENTS 2 to N_eq
-    
+    # print(h)
+    # h=param.h.copy()
     # C3 - Loop - iteration on each segment (from segment 2 to N_eq=number of eq)
     for iseg in range (1, N_eq):
-            
+        
         j = np.where((Z > sc0[iseg]) & (Z <= sc0[iseg+1]))[0]  # index of samples from segment iseg
         z_j = Z[j]  # initial depth along z of these samples (g.cm-2)
         N_new = np.zeros(len(z_j))
@@ -257,8 +272,8 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
         # C4 - Loop - iteration each sample from segment iseg     
         for k in range (0, len(j)) :                                                  
             
-            ejk = eo[j[k]]  # initial position along e is stil eo.
-            djk = d[j[k],:]
+            ejk = eo[j[k]].copy()  # initial position along e is stil eo.
+            djk = d[j[k],:].copy()
             djk[62] = djk[62]*sin((beta - alpha)*pi/180) # AVERF 
             
             N_in = Ni[j[k]]  #  initial concentration is Ni
@@ -267,14 +282,16 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
             for l in range (0, iseg):                                                     
              
                 # depth (along z) are modified after each earthquake
-                djk[62] = djk[62] - (slip[l]*rho_coll*sin((beta - alpha) *pi/180)) # AVERF 
+                djk[62] = djk[62] - (slip[l]*rho_coll*sin((beta - alpha) *pi/180))# AVERF 
                 d0 = djk.copy()
                 d0[62] = 0 
 
                 #------------------------------            
                 # C6 - DEPTH LOOP - iteration during BURIED PERIOD (T1 -> T(iseg-1))
                 #------------------------------ 
-                for iii in range (0, int(age[l]-age[l+1]),time_interval):
+                
+                
+                for iii in range (0, int(age[l]-age[l+1]), time_interval):
                     P_cosmo,P_rad = clrock(djk, ejk, Lambda_f_e, so_f_e, EL_f[1], EL_mu[1]) 
                     # scaling at depth due to the presence of the colluvium: scoll=Pcoll(j)/Pcoll(z=0)
                     P_coll = clcoll(coll, djk, Lambda_f_diseg[l+1], so_f_diseg[l+1], EL_f[1], EL_mu[1]) 
@@ -286,14 +303,16 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
                     N_in = N_out
                 N_in = N_out  
             N_in = N_out 
-            hjk = h[j[k]]
+            hjk = h[j[k]].copy()
           
             #------------------------------         
             # C7 - SURFACE LOOP - iteration during EXHUMED PERIOD 
+            # h=param.h.copy()
             
             for ii in range (0, int(age[iseg]), time_interval):
+                # print(hjk)
                 P_cosmo,P_rad = clrock(djk,ejk,Lambda_f_e,so_f_e,EL_f[1],EL_mu[1]) 
-                scorr = S_S[1+int(hjk)]/S_S[0]  # surface scaling factor (scorr)
+                scorr = S_S[int(hjk)-1]/S_S[0]  # surface scaling factor (scorr)
                 P_tot = P_rad + P_cosmo*scorr  # only Pcosmogenic is scaled with scorr
                 N_out = N_in + (P_tot - lambda36*N_in)*time_interval # minus radioactive decrease during same time step
                 ejk = ejk - epsilon*time_interval*0.1*rho_rock  # new position along e at each time step (g.cm-2)
@@ -301,9 +320,11 @@ def mds_torch(seismic_scenario, scaling_factors, constants, parameters, long_int
             N_new[k] = N_out
         Nf[j] = N_new 
     Nf2=torch.tensor(Nf)
-    toc2=time.time()
-    print(toc1-tic1)
-    print(toc2-tic2)
+    
+    # Writting final concentration file
+    cl_load=np.load('results/synthetic_cl36.npy')
+    cl_save=np.concatenate((cl_load, Nf))
+    np.save('results/synthetic_cl36.npy', cl_save)
     return Nf2
 
 def long_term(seismic_scenario, scaling_factors, constants, parameters, long_int, find_slip):
@@ -322,8 +343,8 @@ def long_term(seismic_scenario, scaling_factors, constants, parameters, long_int
     coll = param.coll
     thick = param.thick
     th2 = param.th2  # 1/2 thickness converted in g.cm-2
-    h = param.h  # initial positions of the samples at surface (cm)
-    Z = param.Z
+    h = param.h.copy()  # initial positions of the samples at surface (cm)
+    Z = param.Z.copy()
     rho_rock = param.rho_rock
     rho_coll = param.rho_coll
     epsilon = param.erosion_rate
@@ -411,7 +432,7 @@ def long_term(seismic_scenario, scaling_factors, constants, parameters, long_int
 
     # conversion denud rate from m/Myr to cm/yr
     SR = SR*1e-1 # (cm/yr)
-    start_depth = preexp*SR#+Hfinal #facet_height    #(cm) along the fault plane
+    start_depth = preexp*SR #+Hfinal #facet_height    #(cm) along the fault plane
     # print(start_depth/1e2, 'm')
     # preexp = (facet_height-Hfinal) / SR
     # print(preexp/1e3, 'Kyr')
@@ -457,8 +478,8 @@ def seismic(seismic_scenario, scaling_factors, constants, parameters, Ni, seis_i
     rho_rock = param.rho_rock  # rock sample mean density
     thick = param.thick
     th2 = param.th2 # 1/2 thickness converted in g.cm-2
-    h = param.h  # initial positions of the samples at surface (cm)- integer
-    Z = param.Z
+    h = param.h.copy()  # initial positions of the samples at surface (cm)- integer
+    Z = param.Z.copy()
     data = param.data
     coll = param.coll
     EL = param.sf
@@ -478,17 +499,24 @@ def seismic(seismic_scenario, scaling_factors, constants, parameters, Ni, seis_i
     
     # Seismic scenario
     age_base = seismic_scenario['ages']
-    age = age_base.clone().detach().numpy() 
+    age = age_base.clone().detach().numpy()
+    # Save age
+    load_ages=np.load('results/ages.npy')
+    save_ages=np.concatenate((load_ages, age))
+    np.save('results/ages.npy', save_ages)
     slip_base=seismic_scenario['slips']
     slip = slip_base.clone().detach().numpy() 
-    
+    slip = np.abs(slip)
     # Constant
     lambda36 = constants['lambda36']
     
     # cumsum(slip) must be equal to Hfinal to avoid estimation of slip in non sampled part
     if (find_slip == True and np.sum(slip)<Hscarp) or (find_slip == True and np.sum(slip))>Hscarp:
         slip = ((slip/np.sum(slip))*Hscarp)+1 # +1 because int(slips) is used below and sometimes the last sample is not included
-    
+        # Saving slips
+    load_slips=np.load('results/slips.npy')
+    save_slips=np.concatenate((load_slips, slip))
+    np.save('results/slips.npy', save_slips)
     # Handling of quiescence period
     if seismic_scenario['quiescence'] !=0 :
         age = np.hstack((seismic_scenario['quiescence'] + age[0], age))
@@ -504,8 +532,8 @@ def seismic(seismic_scenario, scaling_factors, constants, parameters, Ni, seis_i
     R = np.sum(slip)  # total cumulative slip
     Rc = np.cumsum(slip)   
     Rc = np.hstack((0, Rc)) # slip added up after each earthquake
-    d = data # substitution of matrix data by matrix d
-    d[:,62] = Z  # samples position along z
+    d = data.copy() # substitution of matrix data by matrix d
+    d[:,62] = Z.copy()  # samples position along z
     d[:,63] = (thick)*rho_rock  # thickness converted in g.cm-2
     slip_gcm2 = slip * rho_coll  # coseismic slip in g.cm-2
     sc = np.cumsum(slip_gcm2)  # cumulative slip after each earthquake (g.cm-2)
@@ -539,8 +567,8 @@ def seismic(seismic_scenario, scaling_factors, constants, parameters, Ni, seis_i
     # C1 - Loop - iteration on samples (k) from first exhumed segment
     for k in range (0, len(j1)):
         
-        djk = d[j1[k],:]
-        hjk = h[j1[k]]   # position of sample k (cm)
+        djk = d[j1[k],:].copy()
+        hjk = h[j1[k]].copy()   # position of sample k (cm)
         N_in = float(Ni[j1[k]])  # initial concentration is Ni, obtained after pre-exposure
         ejk = eo[j1[k]]   # initial position along e is eo(j1(k)) 
              
@@ -548,7 +576,7 @@ def seismic(seismic_scenario, scaling_factors, constants, parameters, Ni, seis_i
         for ii in range (0, int(age[0]),time_interval):
             
             P_cosmo, P_rad = clrock(djk, ejk, Lambda_f_e, so_f_e, EL_f[1], EL_mu[1]) 
-            scorr = S_S[int(hjk)]/S_S[0]     
+            scorr = S_S[int(hjk-1)]/S_S[0]     
             
             P_tot = P_rad + P_cosmo*scorr            # only Pcosmogenic is scaled with scorr
             N_out = N_in + (P_tot - lambda36*N_in)*time_interval  # minus radioactive decrease during same time step
@@ -581,7 +609,7 @@ def seismic(seismic_scenario, scaling_factors, constants, parameters, Ni, seis_i
             for l in range (0, iseg):                                                     
              
                 # depth (along z) are modified after each earthquake
-                djk[62] = djk[62] - (slip[l]*rho_coll*sin((beta - alpha) *pi/180)) # AVERF 
+                djk[62] = djk[62].copy() - (slip[l]*rho_coll*sin((beta - alpha) *pi/180)) # AVERF 
                 d0 = djk.copy()
                 d0[62] = 0 
 
@@ -615,5 +643,11 @@ def seismic(seismic_scenario, scaling_factors, constants, parameters, Ni, seis_i
             N_new[k] = N_out
         Nf[j] = N_new 
     Nf2=torch.tensor(Nf)
+    
+    cl_load=np.load('results/synthetic_cl36.npy')
+    # print(len(cl_save), len(Nf))
+    cl_save=np.concatenate((cl_load, Nf))
+    np.save('results/synthetic_cl36.npy', cl_save)
+    
     
     return Nf2
