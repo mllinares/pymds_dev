@@ -71,7 +71,7 @@ sf.csv : datafile of the magnetic field factors (you can use your own)\
 Example on synthetic dataset
 ----------------------------
 Usage of a python IDE strongly recommended!\
-An ```example``` folder is provided with synthetic dataset corresponding to the following scenario : 3 earthquakes (7000, 2500, 500 BCE), each generating 300 cm of displacement, slip rate of 0.3 mm/yr. In this example, only the ages are searched.\
+An ```example``` folder is provided with synthetic dataset corresponding to the following scenario : 3 earthquakes (9000, 5500, 1500 BCE), each generating 300 cm of displacement, slip rate of 0.8 mm/yr. In this example, only the ages are searched.\
 Note : You can generate your own synthetic files with the ``` generate_synthetics.py``` script.
 
 You can run the inversion either from python IDE or through command lines:
