@@ -1,5 +1,5 @@
 # pymds_dev
-Dev repo of pymds, test for the true repo
+Repository of PyMDS, python code to invert chlorine 36 dataset to retrieve earthquake on fault scarp
 
 Install
 -------
