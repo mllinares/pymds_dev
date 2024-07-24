@@ -261,4 +261,9 @@ https://www.cambridge.org/core/books/cosmogenic-nuclides/403A3823168B0B721CB2D8E
 
 License
 -------
+                    GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
 
+ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
