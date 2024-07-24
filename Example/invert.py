@@ -24,7 +24,6 @@ import parameters
 import os
 import pickle
 
-
 #%% Initialization
 sys.stdout = open('summary.txt', 'w') # open summary.txt file, all print goes to file
 today = datetime.now().strftime("%d/%m/%Y %H:%M:%S") # get today's date day/month/year hour:min:sec
@@ -159,95 +158,11 @@ if invert_slips == True or allow_rpt_incertitude==True:
     rhat_slip=post.get_rhat_array('slip', mcmc.diagnostics(), number_of_events)
 if invert_sr == True:
     rhat_sr=post.get_rhat('SR', mcmc.diagnostics())
-    
-#%% Loading sampled results
-cl36_profiles = post.load_result(path='results/synthetic_cl36.npy', nb_columns = len(cl36AMS))
-ages = post.load_result(path='results/ages.npy', nb_columns = number_of_events)
-if find_slip == True :
-    slips = post.load_result(path='results/slips.npy', nb_columns = number_of_events)
-
-if invert_sr==True:
-    SRs = post.load_result(path='results/SRs.npy')
-
-# #%% Get statistics on sampled results
-# median_age, mean_age, std_age, var_age = post.get_statistics_2D(ages, plot=True, namefig='ages')
-# median_age70, mean_age70, std_age70, var_age70 = post.get_statistics_2D(ages[int(0.7*len(ages)):len(ages),:], plot=True, namefig='ages70')
-
-# if find_slip==True:
-#     median_slip, mean_slip, std_slip, var_slip = post.get_statistics_2D(slips, plot=True, namefig='slips')
-#     median_slip70, mean_slip70, std_slip70, var_slip70 = post.get_statistics_2D(slips[int(0.7*len(ages)):len(ages),:], plot=True, namefig='slips70')
-
-# if invert_sr==True:
-#     median_sr, mean_sr, std_sr, var_sr = post.get_statistics_1D(SRs, plot=True, namefig='sr')
-#     median_sr70, mean_sr70, std_sr70, var_sr70 = post.get_statistics_1D(SRs[int(0.7*len(ages)):len(ages)], plot=True, namefig='sr70')
-
-
-#%% Compute median model of the last 30% of infered models
-# infered_scenario={}
-# infered_scenario['ages']=torch.tensor(median_age70)
-# if find_slip==True:
-#     infered_scenario['slips']=torch.tensor(median_slip70)
-# elif use_rpt==True and find_slip==False:
-#     infered_scenario['slips']=slips_rpt
-# else:
-#     infered_scenario['slips']=true_scenario['slips']
-    
-# if invert_sr==True:
-#     infered_scenario['SR']=torch.tensor(median_sr70)
-# else:
-#     infered_scenario['SR']=torch.tensor(true_scenario['SR'])
-# infered_scenario['preexp']=true_scenario['preexp']
-# infered_scenario['quiescence']=true_scenario['quiescence']
-
-# if invert_sr==False:
-#     median_cl36_70=forward.seismic(infered_scenario, scaling_factors, constants, parameters, Ni=long_term_36cl, seis_int=seismic_interval, find_slip = find_slip)
-# else:
-#     median_cl36_70=forward.mds_torch(infered_scenario, scaling_factors, constants, parameters, long_int = long_term_interval, seis_int=seismic_interval, find_slip = find_slip)
-
-# #%% Weighted Root Mean Square Error on models
-# all_RMSw=np.zeros((len(cl36_profiles)))
-# for i in range(0, len(cl36_profiles)):
-#     all_RMSw[i]=post.WRMSE(cl36AMS, cl36_profiles[i], sigAMS)
-# rmsw_median_model=post.WRMSE(cl36AMS, median_cl36_70.detach().numpy(), incertitude=sigAMS)
-# print('\n  RMSw on median model : ', rmsw_median_model)
-#%% Plotting
-# # Profiles
-# post.plot_profile(cl36AMS, param.sig_cl36AMS, height, trench_depth, median_cl36_70, 'plot_median')
-# post.plot_min_max(cl36AMS, height*1e2, cl36_profiles.T, Hscarp=Hfinal, trench_depth=0, sigAMS=sigAMS, slips=median_slip, plot_name='all_models')
-# post.plot_min_max(cl36AMS, height*1e2, cl36_profiles[int(0.7*nb_sample)::].T,Hscarp=Hfinal, trench_depth=0, sigAMS=sigAMS, slips=median_slip, plot_name='70_models')
 
 if true_scenario_known==True:
     true_age=true_scenario['ages']
     true_slips=true_scenario['slips']
     true_sr=true_scenario['SR']
-
-# #%% Plot ages infered through time
-# if true_scenario_known == False or number_of_events!=len(true_age):
-#     for i in range (0, number_of_events):
-#         post.plot_variable_np(ages[:, i], 'Event '+str(i+1), 'Age', num_fig=i+1) 
-# else:
-#     for i in range (0, number_of_events):
-#         post.plot_variable_np(ages[:, i], 'Event '+str(i+1), 'Age', true_value=true_age[i], num_fig=i+1) #true_value=true_age[i],
-
-# #%% Plot slip through time and 2D plots
-# if invert_slips==True:
-#     if true_scenario_known == False or number_of_events!=len(true_slips):
-#         for i in range (0, number_of_events):
-#             post.plot_variable_np(slips[:, i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1) 
-#             post.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age70[i], median_slip70[i]]))
-#     elif true_scenario_known == True and number_of_events==len(true_slips):
-#         for i in range (0, number_of_events):
-#             post.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), true_values=np.array([true_scenario['ages'][i], true_scenario['slips'][i]]), median_values=np.array([median_age70[i], median_slip70[i]]))
-#             post.plot_variable_np(slips[:, i],true_value=true_slips[i], title='Slip '+str(i+1), var_name='Slip', num_fig=i+1)
-#     elif true_scenario_known==True and number_of_events!=len(true_age):
-#         for i in range (0, number_of_events):
-#             post.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1), median_values=np.array([median_age70[i], median_slip70[i]]))
-#             post.plot_2D(ages[:,i], slips[:,i], all_RMSw, x_label='age '+str(i+1)+' (yr)',y_label='slip '+str(i+1)+' (cm)', title='age'+str(i+1)+'_vs_slip'+str(i+1)+'_with_true_values', true_values=np.array([true_scenario['ages'].numpy(), true_scenario['slips'].numpy()]), median_values=np.array([median_age70[i], median_slip70[i]]))
-
-# if invert_sr == True and true_scenario_known==True:
-#     post.plot_variable_np(SRs, 'SR', 'SR (mm/yr)', true_value = true_scenario['SR'])
-# elif invert_sr == True and true_scenario_known==False:
-#     post.plot_variable_np(SRs, 'SR', 'SR (mm/yr)')
 
 #%% Posterior samples
 post_ages=post.get_posterior_ages('posterior_samples', number_of_events, nb_sample)
@@ -323,18 +238,4 @@ np.savetxt('cl36_models_post70.txt', cl36_models_post70)
 np.savetxt('RMSE_post70.txt', RMSE_post70)
 #%%
 post.plot_min_max(cl36AMS, height*1e2, cl36_models_post70,Hscarp=Hfinal, trench_depth=param.trench_depth, sigAMS=sigAMS, slips=post_slips70, plot_name='70_models')
-
-# hist_colors=['silver', 'brown', 'aqua']
-
-#%%
 post.scatter_hist(post_ages70, post_slips70)
-# possible_ages=np.zeros((number_of_events,3))
-# for i in range(0, number_of_events):
-#     possible_ages[i]=(median_post_age70[i]-std_post_age70[i], median_post_age70[i], median_post_age70[i]+std_post_age70[i])
-
-# possible_slips=np.zeros((number_of_events,3))
-# for i in range(0, number_of_events):
-#     possible_slips[i]=(median_post_slip70[i]-std_post_slip70[i], median_post_slip70[i], median_post_slip70[i]+std_post_slip70[i])
-
-# possible_SRs=np.array([median_post_sr70-std_post_sr70, median_post_sr70, median_post_sr70+std_post_sr70])
-# print('\nTime for plotting : ', '{0:.2f}'.format((toc_pp-tic_pp)/60), 'min')
