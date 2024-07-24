@@ -151,7 +151,7 @@ To construct the ```sf.csv``` file : use the ```magfield.xls``` file to calculat
 ![mag_scaling_factor_calc](https://github.com/user-attachments/assets/489e1854-b1f7-455b-9fe7-c61e4f6cadf1)
 
 Modify the Latitude and altitude accordingly.
-Copy and paste ```Corr Neutrons``` and ```Corr Muons``` values as the first two columns of the ```sf.csv``` file.
+Copy and paste ```Corr Neutrons``` and ```Corr Muons``` values as the third and fourth columns of the ```sf.csv``` file.
 
 How to use on true dataset
 --------------------------
