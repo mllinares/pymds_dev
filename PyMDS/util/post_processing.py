@@ -8,11 +8,11 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+from scipy.stats import gaussian_kde
 import pickle
 import itertools
 import ruptures as rpt
 import torch
-from scipy.stats import gaussian_kde
 
 #%%
 def precompute_slips(cl_36, h_samples, nb_bkps, model_name='normal', pen_algo=False, max_bkps=15, plot=False, trench_depth=0):
@@ -272,8 +272,8 @@ def plot_profile(clAMS, sigAMS, height, trench_depth, inferred_cl36, plot_name):
     plt.legend()
     plt.savefig(plot_name+'.png', dpi = 1200)
     plt.close('all')
-    return 
-
+    return
+    
 def plot_rpt(sample_height, cl36_profile, ruptures, trench_depth=0):
     """ Plot the ruptures found by the rupture package
     INPUTS : sample_height, height of the samples, type : 1D array (torch or numpy)
@@ -439,8 +439,7 @@ def plot_2D(Var1, Var2, RMSE, x_label, y_label, title, true_values=np.array([]),
     plt.savefig(title+'.png', dpi=1200)
     plt.close('all')
     return
-
-def scatter_hist(x, y, hist_colors, cmap_density='viridis_r', vlines_color='firebrick'):
+def scatter_hist(x, y, hist_colors=[], cmap_density='viridis_r', vlines_color='black'):
     
     
     # Start with a square Figure.
@@ -469,20 +468,24 @@ def scatter_hist(x, y, hist_colors, cmap_density='viridis_r', vlines_color='fire
     median_x=np.zeros((number_of_events)) # store the median value to define the vlines later
     median_y=np.zeros((number_of_events))
     
+    if hist_colors==[]:
+        hist_colors = plt.cm.bone(np.linspace(0, 0.7, number_of_events))
     # the scatter plot: 
     for i in range(0, np.shape(x)[1]):
         try:
             xy_kde = np.vstack([x[:,i], y[:,i]])
             z = gaussian_kde(xy_kde)(xy_kde) # first calculate the density of points
-            ax.scatter(x[:,i], y[:,i], c=z, cmap=cm, alpha=0.01) # plot with a cmap corresponding to the density of points
+            ax.scatter(x[:,i], y[:,i], c=z, cmap=cm, alpha=0.015) # plot with a cmap corresponding to the density of points
         except:
             print('Density could not be estimated, cmap was not applied')
             ax.scatter(x[:,i], y[:,i], c='black', alpha=0.01) # plot with a cmap corresponding to the density of points
-    print('out')
+    
     # the histograms : in a loop to vary the color of the histogram
+    bin_width=(np.max(y)-np.min(y))/100
+    bin_width_x=(np.max(x)-np.min(x))/100
     for i in range(0, number_of_events):
-        bar_heights_x, bins, patches=ax_histx.hist(x[:,i], color=hist_colors[i], alpha=0.3)
-        bar_heights_y, bins, patches=ax_histy.hist(y[:,i], bins=int((np.min(y[:,i])+np.max(y[:,i]))/20), orientation='horizontal', color=hist_colors[i])
+        bar_heights_x, bins, patches=ax_histx.hist(x[:,i], bins=np.arange(np.min(x[:,i]),np.max(x[:,i])+bin_width_x, bin_width_x), color=hist_colors[i], alpha=0.8)
+        bar_heights_y, bins, patches=ax_histy.hist(y[:,i], bins=np.arange(np.min(y[:,i]),np.max(y[:,i])+bin_width, bin_width), orientation='horizontal', color=hist_colors[i], alpha=0.8)
         max_bar_heights_x[i]=np.max(bar_heights_x)
         max_bar_heights_y[i]=np.max(bar_heights_y)
         median_x[i]=np.median(x[:,i])
@@ -494,8 +497,7 @@ def scatter_hist(x, y, hist_colors, cmap_density='viridis_r', vlines_color='fire
     ax.set_xlabel('Ages (yr BP)') # x label
     ax.set_ylabel('Slips (cm)') # y label
     plt.savefig('scatter_plot.png', dpi=1200)
-    print('plot end')
-    plt.close('all')
+    # plt.close('all')
     return
     
 # %% computational functions
@@ -510,9 +512,8 @@ def WRMSE(observed_data, modeled_data, incertitude=np.array([])):
     
     if len(incertitude)==0:
         incertitude=np.ones((len(modeled_data))) # to avoid infinity value when incertitude is not known
-    
-    weighted_rmse=np.sqrt(np.mean(((observed_data-modeled_data)/incertitude)**2))
-    return weighted_rmse
+    rmsw=np.sqrt(np.mean(((observed_data-modeled_data)/incertitude)**2))
+    return rmsw
     
 def AICC(measurements, calculations, nb_param):
     """ This function allows to calculate the Akaike criterion
