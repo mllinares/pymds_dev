@@ -15,13 +15,13 @@ class param:
         self.site_name='synth2'
         self.rho_rock = 2.7 # rock mean density
         self.rho_coll = 1.5 # colluvium mean density
-        self.alpha = 30 # colluvium dip (degrees)
-        self.beta = 50 # scarp dip (degrees)
-        self.gamma = 30 # eroded scarp dip (degrees)
+        self.alpha = 25 # colluvium dip (degrees)
+        self.beta = 60 # scarp dip (degrees)
+        self.gamma = 35 # eroded scarp dip (degrees)
         self.erosion_rate = 0 # Erosion rate (mm/yr)
         self.trench_depth = 0 # trench depth (cm)
         self.long_term_relief = 500 * 1e2 # cumulative height due to long term history (cm)
-        self.data = np.loadtxt('synthetic_file.csv', delimiter=',') # samples chemestry
+        self.data = np.loadtxt('synthetic_file.csv', delimiter=',') # samples chemestry synthetic_file
         self.coll = np.loadtxt('coll.csv', delimiter=',') # colluvial wedge chemistry
         self.sf = np.loadtxt('sf.csv', delimiter=',') # scaling factors for neutrons and muons reactions
         

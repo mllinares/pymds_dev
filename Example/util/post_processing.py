@@ -439,7 +439,7 @@ def plot_2D(Var1, Var2, RMSE, x_label, y_label, title, true_values=np.array([]),
     plt.savefig(title+'.png', dpi=1200)
     plt.close('all')
     return
-def scatter_hist(x, y, hist_colors, cmap_density='viridis_r', vlines_color='black'):
+def scatter_hist(x, y, hist_colors=[], cmap_density='viridis_r', vlines_color='black'):
     
     
     # Start with a square Figure.
@@ -468,6 +468,8 @@ def scatter_hist(x, y, hist_colors, cmap_density='viridis_r', vlines_color='blac
     median_x=np.zeros((number_of_events)) # store the median value to define the vlines later
     median_y=np.zeros((number_of_events))
     
+    if hist_colors==[]:
+        hist_colors = plt.cm.bone(np.linspace(0, 0.7, number_of_events))
     # the scatter plot: 
     for i in range(0, np.shape(x)[1]):
         try:
@@ -482,8 +484,8 @@ def scatter_hist(x, y, hist_colors, cmap_density='viridis_r', vlines_color='blac
     bin_width=(np.max(y)-np.min(y))/100
     bin_width_x=(np.max(x)-np.min(x))/100
     for i in range(0, number_of_events):
-        bar_heights_x, bins, patches=ax_histx.hist(x[:,i], bins=np.arange(np.min(x[:,i]),np.max(x[:,i])+bin_width_x, bin_width_x), color=hist_colors[i], alpha=0.5)
-        bar_heights_y, bins, patches=ax_histy.hist(y[:,i], bins=np.arange(np.min(y[:,i]),np.max(y[:,i])+bin_width, bin_width), orientation='horizontal', color=hist_colors[i], alpha=0.5)
+        bar_heights_x, bins, patches=ax_histx.hist(x[:,i], bins=np.arange(np.min(x[:,i]),np.max(x[:,i])+bin_width_x, bin_width_x), color=hist_colors[i], alpha=0.8)
+        bar_heights_y, bins, patches=ax_histy.hist(y[:,i], bins=np.arange(np.min(y[:,i]),np.max(y[:,i])+bin_width, bin_width), orientation='horizontal', color=hist_colors[i], alpha=0.8)
         max_bar_heights_x[i]=np.max(bar_heights_x)
         max_bar_heights_y[i]=np.max(bar_heights_y)
         median_x[i]=np.median(x[:,i])
