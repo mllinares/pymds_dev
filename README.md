@@ -142,12 +142,22 @@ target_prob = 0.7 # target acceptancy probability (<1)
 
 ```
 
+Datafiles
+----------
+3 datafiles are required ```data.csv```, ```coll.csv``` and ```sf.csv```\
+Refer to the ```Format your data``` folder to find excel files expliciting the columns required for the ```data.csv``` and ```coll.csv``` files (chemistry)\
+To construct the ```sf.csv``` file : use the ```magfield.xls``` file to calculate the neutrons (Sp) and muons (Mp) spallation rates depending on the sampling site location.
+
+![mag_scaling_factor_calc](https://github.com/user-attachments/assets/489e1854-b1f7-455b-9fe7-c61e4f6cadf1)
+
+Copy and paste ```Corr Neutrons``` and ```Corr Muons``` values as the first two columns of the ```sf.csv``` file.
+
 How to use on true dataset
 --------------------------
 Usage of a supercomputer recommended!\
 Since you usually do not know the number of earthquakes, you will need to run in parallel inversions with variying number of earthquakes and determine the minimum number of earthquakes afterward through an elbow method (i.e. plot of RMSw vs number of earthquakes). This allows you to determine the minimum number of earthquakes necessary to explain th observed 36Cl profile.
 
-1) Copy and paste your datafiles in the package folder, in .csv format (delimiter must be ','), you can find a script to convert into csv format your files.\
+1) Copy and paste your datafiles (data.csv, coll.csv, sf.csv) in the package folder, in .csv format (delimiter must be ','), you can find a script to convert into csv format your files.\
 If your datafile names do not correspond to 'data.csv' for rock chemistry, 'coll.csv' for the colluvium chemistry and 'sf.csv' for the magnetic field factors, rename them or change the name in parameter.py.
 2) Modify the following inside the "parameters.py" file according to your own site:
 
@@ -206,7 +216,7 @@ If you look at the provided example on synthetic dataset, you can see that the m
 
 NUTS or RandomWalk ?
 ------------------
-Both give equivalent results in equivalent runtime. Usage of RandomWalk:\
+Both give equivalent results in equivalent runtime on synthetic dataset but was NOT tested on natural dataset. Usage of RandomWalk:\
 All the modifications are done in the ```invert.py``` file
 
 ```python
