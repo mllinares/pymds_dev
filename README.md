@@ -215,6 +215,21 @@ In the ```summary.txt``` file you can find a "r_hat" value associated to all of 
 
 If you look at the provided example on synthetic dataset, you can see that the most recent age found is ~700 BCE with a r_hat=1.7, this means that the value is close to the solution but you can do better. A solution would be to increase the number of sampling steps (we can see in the event3.png that the value is not stabilized).
 
+Frequent errors/questions
+---------------
+1) "Cannot find initial valid parameters!"\
+Review your a priori : you can increase the intervall on your parameters or fix some of those\
+Decrease the target prob\
+Increase the tree depth\
+Increase the warm-up
+2) I have bad rhat values!\
+Increase the number of samples
+3) Can I restart from the same point?\
+No but you can adjust your a priori according to your previous run : for instance you can reduce the intervall basede on the result of the run.
+5) It doesn't fit!\
+Try 1) and 2)\
+contact: maureen.llinares@gmail.com / llinares@cerge.fr
+
 NUTS or RandomWalk ?
 ------------------
 Both give equivalent results in equivalent runtime on synthetic dataset but was NOT tested on natural dataset. Usage of RandomWalk:\
