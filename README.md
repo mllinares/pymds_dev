@@ -1,5 +1,5 @@
 # pymds_dev
-Repository of PyMDS, python code to invert chlorine 36 dataset to retrieve earthquake on fault scarp
+Repository of PyMDS: a user-frindly code to invert chlorine 36 dataset to retrieve eartquake sequence on normal faults
 
 Install
 -------
