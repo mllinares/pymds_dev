@@ -205,7 +205,7 @@ target_prob = 0.9 # target acceptancy probability (<1)
 ```
 It is recommended to first test the algorithm without the warmup (10), low number of samples(500), low tree depth (1) and low target acceptancy probability (0.2) and then increase the number of samples and the target acceptancy probability, the algorithm performs better with low tree depth and low warmup since the order of magnitude between our parameters are low.
 
-If you have no idea of what those are, it is recommended that you take a look the jupyter notebook ```quick_pyro_intro.ipynb``` inside the example\Tutorials folder before using pymds on true datasets.\
+If you have no idea of what those are, it is recommended that you take a look the jupyter notebook ```quick_pyro_intro.ipynb``` inside the example\Tutorials folder before using pymds on true datasets.
 
 5) Use a elbow plot to determine the most probable scenario
 
