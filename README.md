@@ -224,8 +224,8 @@ Increase the tree depth\
 Increase the warm-up
 2) I have bad rhat values!\
 Increase the number of samples
-3) Can I restart from the same point?\
-No but you can adjust your a priori according to your previous run : for instance you can reduce the intervall basede on the result of the run.
+3) I need to run the inversion again. Can I restart from the last point?\
+No but you can adjust your a priori according to your previous run : for instance you can reduce the intervall based on the result of the last run.
 5) It doesn't fit!\
 Try 1) and 2)\
 contact: maureen.llinares@gmail.com / llinares@cerge.fr
