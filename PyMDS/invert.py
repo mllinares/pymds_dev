@@ -98,7 +98,7 @@ def model(obs):
         slips = torch.zeros((number_of_events))
         slips[0]=pyro.sample('slip1', dist.Uniform(1, 400))
         for i in range(1, number_of_events):
-            max_slip=Hfinal-torch.sum(slips)
+            max_slip=400
             slips[i] = pyro.sample('slip'+str(i+1), dist.Uniform(0, max_slip))
         seismic_scenario['slips'] = slips
         
