@@ -250,7 +250,7 @@ print('\n  divergences :', len(mcmc.diagnostics()['divergences']['chain 0']))
 ```
 Link to publication
 --------------------
-If you use PyMDS in a research paper, please consider citing the associated paper ....
+If you use PyMDS in a research paper, please consider citing the associated paper : A new inversion algorithm (PyMDS) based on the Pyro library to use chlorine 36 data as a paleoseismological tool on normal fault scarps, Llinares et al. 2025,https://doi.org/10.1016/j.acags.2025.100234
 
 Bibliography
 ------------
